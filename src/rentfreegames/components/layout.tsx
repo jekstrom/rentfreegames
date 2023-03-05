@@ -26,7 +26,7 @@ export default function Layout({
         <meta name="theme-color" content="#ffffff"/>
         <meta
           name="description"
-          content="Learn how toxx build a personal website using Next.js"
+          content="Learn how to build a personal website using Next.js"
         />
         <meta
           property="og:image"
@@ -71,11 +71,6 @@ export default function Layout({
         )}
       </header>
       <main>{children}</main>
-      {!home && (
-        <div className={styles.backToHome}>
-          <Link href="/">← Back to home</Link>
-        </div>
-      )}
     </div>
   )
 }

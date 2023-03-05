@@ -23,8 +23,9 @@ export default function Home({
       <section className={utilStyles.headingMd}>
         <p>rentfreegames</p>
         <p>
-          stuff
+          things
         </p>
+        <Link href={`/games`}>Games</Link>
       </section>
       <section className={`${utilStyles.headingMd} ${utilStyles.padding1px}`}>
         <h2 className={utilStyles.headingLg}>Blog</h2>
