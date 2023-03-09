@@ -1,40 +1,21 @@
-import fs from 'fs'
-import path from 'path'
-import matter from 'gray-matter'
-import { remark } from 'remark'
-import html from 'remark-html'
-import { parse } from 'csv-parse'
-
-const gamesDirectory = path.join(process.cwd(), '../../data')
-const boardGameFileName = "games.csv";
+import { games } from '../data/games'
 
 export async function getSortedGamesData(id?: string | string[]) {
-  const allGamesDataFilename = path.join(gamesDirectory, boardGameFileName);
-
-  const records = [];
-
-  const parser = fs
-    .createReadStream(allGamesDataFilename)
-    .pipe(parse({
-      delimiter: ',',
-      from_line: 1,
-      columns: true
-    }));
-
-  for await (const record of parser) {
-    record.Rank = record['Rank:boardgame'];
-    if (id && record.BGGId == id) {
-      records.push(record);
-      break;
-    }
-    else {
-      records.push(record);
-    }
+  if (id) {
+    return [games.find((g) => g.BGGId === id)];
+  } else {
+    return games.sort((a, b) => {
+      return parseFloat(a.Rank) - parseFloat(b.Rank);
+    });
   }
+}
 
-  return records.sort((a, b) => {
-    return a.Rank - b.Rank;
-  });
+export async function getGamesData(id: string | string[]) {
+  if (id) {
+    return [games.find((g) => g.BGGId === id)];
+  } else {
+    return games;
+  }
 }
 
 export async function getAllGameIds() {
@@ -50,7 +31,7 @@ export async function getAllGameIds() {
 
 
 export async function getGameData(id?: string) {
-  const gameData = id === undefined ? [] : await getSortedGamesData(id)
+  const gameData = id === undefined ? [] : await getGamesData(id)
 
   return gameData[0]
 }

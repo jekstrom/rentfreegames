@@ -4,6 +4,7 @@ import utilStyles from '../../styles/utils.module.css'
 import Link from 'next/link'
 import { GetStaticProps } from 'next'
 import { getSortedGamesData } from '../../lib/games'
+import Search from '../../components/search'
 
 export default function Games({
     allGamesData,
@@ -26,6 +27,9 @@ export default function Games({
                 <p>
                     things
                 </p>
+            </section>
+            <section>
+                <Search/>
             </section>
             <section className={`${utilStyles.headingMd} ${utilStyles.padding1px}`}>
                 <h2 className={utilStyles.headingLg}>Games</h2>

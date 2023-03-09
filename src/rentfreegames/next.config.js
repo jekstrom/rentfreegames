@@ -10,5 +10,7 @@ module.exports = {
         },
       ],
     },
+    output: 'standalone',
+    staticPageGenerationTimeout: 120
   }
   
