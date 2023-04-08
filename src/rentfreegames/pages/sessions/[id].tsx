@@ -1,10 +1,9 @@
+import Layout from '../../components/layout'
+import { getAllSessionIds, getSessionData } from '../../lib/sessions'
 import Head from 'next/head'
-import Layout, { siteTitle } from '../../components/layout'
+import Date from '../../components/date'
 import utilStyles from '../../styles/utils.module.css'
-import Link from 'next/link'
-import { GetStaticProps } from 'next'
-import { getSortedGamesData } from '../../lib/games'
-import Search from '../../components/search'
+import { GetStaticProps, GetStaticPaths } from 'next'
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -14,18 +13,16 @@ import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import StarIcon from '@mui/icons-material/Star'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import Typography from '@mui/material/Typography'
+import Link from 'next/link'
 import React from 'react'
 
-export default function Games({
-    allGamesData,
-    page
+export default function Post({
+    sessionData
 }: {
-    allGamesData: {
-        BGGId: number
-        Name: string
-        Rank: number
-    }[],
-    page: number
+    sessionData: {
+        title: string,
+        games: [any]
+    }
 }) {
     const [starred, setStarred] = React.useState([-1]);
 
@@ -45,35 +42,34 @@ export default function Games({
     return (
         <Layout>
             <Head>
-                <title>{siteTitle}</title>
+                <title>{sessionData.title}</title>
             </Head>
-            <section className={utilStyles.headingMd}>
-                <p>All Games</p>
-                <Search />
-            </section>
+            <article>
+                <h1 className={utilStyles.headingXl}>{sessionData.title}</h1>
+            </article>
             <List
                 sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
                 aria-label="games"
             >
-                {allGamesData.map(({ BGGId, Name, Rank }, index) => (
+                {sessionData.games.map(({ BGGId, Name, Rank }, index) => (
                     <ListItem disablePadding key={BGGId}>
                         <ListItemButton role={undefined} onClick={handleToggle(index)}>
-                        <ListItemText
-                            primary={Name}
-                            secondary={
-                                <React.Fragment>
-                                    <Typography
-                                        sx={{ display: 'inline' }}
-                                        component="span"
-                                        variant="body2"
-                                        color="text.primary"
-                                    >
-                                        Rank:
-                                    </Typography>
-                                    {Rank}
-                                </React.Fragment>
-                            }
-                        />
+                            <ListItemText
+                                primary={Name}
+                                secondary={
+                                    <React.Fragment>
+                                        <Typography
+                                            sx={{ display: 'inline' }}
+                                            component="span"
+                                            variant="body2"
+                                            color="text.primary"
+                                        >
+                                            Rank:
+                                        </Typography>
+                                        {Rank}
+                                    </React.Fragment>
+                                }
+                            />
                         
                             <ListItemIcon>
                                 {
@@ -89,11 +85,19 @@ export default function Games({
     )
 }
 
-export const getStaticProps: GetStaticProps = async () => {
-    const allGamesData = await getSortedGamesData();
+export const getStaticPaths: GetStaticPaths = async () => {
+    const paths = getAllSessionIds()
+    return {
+        paths,
+        fallback: false
+    }
+}
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+    const sessionData = await getSessionData(params?.id as string)
     return {
         props: {
-            allGamesData
+            sessionData
         }
     }
 }

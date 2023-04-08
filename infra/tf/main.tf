@@ -182,78 +182,75 @@ data "azurerm_key_vault_certificate" "cert" {
   key_vault_id = azurerm_key_vault.default.id
 }
 
-resource "azurerm_application_gateway" "network" {
-  name                = "rfg-gateway"
-  resource_group_name = azurerm_resource_group.rentfreegames.name
-  location            = azurerm_resource_group.rentfreegames.location
+# resource "azurerm_application_gateway" "network" {
+#   name                = "rfg-gateway"
+#   resource_group_name = azurerm_resource_group.rentfreegames.name
+#   location            = azurerm_resource_group.rentfreegames.location
 
-  sku {
-    name     = "Standard_v2"
-    tier     = "Standard_v2"
-    capacity = 2
-  }
+#   sku {
+#     name     = "Standard_v2"
+#     tier     = "Standard_v2"
+#   }
 
-  gateway_ip_configuration {
-    name      = "rfg-ip-configuration"
-    subnet_id = azurerm_subnet.frontend.id
-  }
+#   autoscale_configuration {
+#     min_capacity = 0
+#     max_capacity = 2
+#   }
 
-  frontend_port {
-    name = local.frontend_port_name
-    port = 443
-  }
+#   gateway_ip_configuration {
+#     name      = "rfg-ip-configuration"
+#     subnet_id = azurerm_subnet.frontend.id
+#   }
 
-  frontend_ip_configuration {
-    name                 = local.frontend_ip_configuration_name
-    public_ip_address_id = azurerm_public_ip.pip.id
-  }
+#   frontend_port {
+#     name = local.frontend_port_name
+#     port = 443
+#   }
 
-  backend_address_pool {
-    name  = local.backend_address_pool_name
-    #fqdns = [azurerm_container_app.rfg_app.latest_revision_fqdn]
-    ip_addresses = [azurerm_container_group.rfg.ip_address]
-  }
+#   frontend_ip_configuration {
+#     name                 = local.frontend_ip_configuration_name
+#     public_ip_address_id = azurerm_public_ip.pip.id
+#   }
 
-  backend_http_settings {
-    name                  = local.http_setting_name
-    cookie_based_affinity = "Disabled"
-    path                  = "/"
-    port                  = 3000
-    protocol              = "Http"
-    request_timeout       = 60
-  }
+#   backend_address_pool {
+#     name  = local.backend_address_pool_name
+#     #fqdns = [azurerm_container_app.rfg_app.latest_revision_fqdn]
+#     ip_addresses = [azurerm_container_group.rfg.ip_address]
+#   }
 
-  http_listener {
-    name                           = local.listener_name
-    frontend_ip_configuration_name = local.frontend_ip_configuration_name
-    frontend_port_name             = local.frontend_port_name
-    protocol                       = "Https"
-    ssl_certificate_name           = data.azurerm_key_vault_certificate.cert.name
-  }
+#   backend_http_settings {
+#     name                  = local.http_setting_name
+#     cookie_based_affinity = "Disabled"
+#     path                  = "/"
+#     port                  = 3000
+#     protocol              = "Http"
+#     request_timeout       = 60
+#   }
 
-  ssl_certificate {
-    name                = data.azurerm_key_vault_certificate.cert.name
-    key_vault_secret_id = data.azurerm_key_vault_certificate.cert.secret_id
-  }
+#   http_listener {
+#     name                           = local.listener_name
+#     frontend_ip_configuration_name = local.frontend_ip_configuration_name
+#     frontend_port_name             = local.frontend_port_name
+#     protocol                       = "Https"
+#     ssl_certificate_name           = data.azurerm_key_vault_certificate.cert.name
+#   }
 
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [var.user_assigned_managed_identity]
-  }
+#   ssl_certificate {
+#     name                = data.azurerm_key_vault_certificate.cert.name
+#     key_vault_secret_id = data.azurerm_key_vault_certificate.cert.secret_id
+#   }
 
-  request_routing_rule {
-    name                       = local.request_routing_rule_name
-    rule_type                  = "Basic"
-    http_listener_name         = local.listener_name
-    backend_address_pool_name  = local.backend_address_pool_name
-    backend_http_settings_name = local.http_setting_name
-    priority                   = 10
-  }
-}
+#   identity {
+#     type         = "UserAssigned"
+#     identity_ids = [var.user_assigned_managed_identity]
+#   }
 
-resource "azurerm_search_service" "rfg-search" {
-  name                = "rfg-search"
-  resource_group_name = azurerm_resource_group.rentfreegames.name
-  location            = azurerm_resource_group.rentfreegames.location
-  sku                 = "free"
-}
+#   request_routing_rule {
+#     name                       = local.request_routing_rule_name
+#     rule_type                  = "Basic"
+#     http_listener_name         = local.listener_name
+#     backend_address_pool_name  = local.backend_address_pool_name
+#     backend_http_settings_name = local.http_setting_name
+#     priority                   = 10
+#   }
+# }

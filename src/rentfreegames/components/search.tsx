@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import Link from 'next/link'
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
 import styles from './search.module.css'
 
 export default function Search() {
@@ -42,14 +44,16 @@ export default function Search() {
       className={styles.container}
       ref={searchRef}
     >
-      <input
-        className={styles.search}
-        onChange={onChange}
-        onFocus={onFocus}
-        placeholder='Search games'
-        type='text'
-        value={query}
-      />
+      <Box
+      component="form"
+      sx={{
+        '& .MuiTextField-root': { m: 1, width: '25ch' },
+      }}
+      noValidate
+      autoComplete="off"
+    >
+      <TextField id="outlined-search" label="Search field" type="search" value={query} onChange={onChange} onFocus={onFocus} />
+    </Box>
       { active && results.length > 0 && (
         <ul className={styles.results}>
           {results.map(({ BGGId, Name }) => (
