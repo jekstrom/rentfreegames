@@ -1,6 +1,7 @@
 import { games } from '../data/games'
+import { Game } from '../interfaces'
 
-export async function getSortedGamesData(id?: string | string[]) {
+export async function getSortedGamesData(id?: string | string[]): Promise<Game[]> {
   if (id) {
     return [games.find((g) => g.BGGId === id)];
   } else {
@@ -10,7 +11,7 @@ export async function getSortedGamesData(id?: string | string[]) {
   }
 }
 
-export async function getGamesData(id: string | string[]) {
+export async function getGamesData(id: string | string[]): Promise<Game[]> {
   if (id) {
     return [games.find((g) => g.BGGId === id)];
   } else {
@@ -30,7 +31,7 @@ export async function getAllGameIds() {
 }
 
 
-export async function getGameData(id?: string) {
+export async function getGameData(id?: string): Promise<Game> {
   const gameData = id === undefined ? [] : await getGamesData(id)
 
   return gameData[0]

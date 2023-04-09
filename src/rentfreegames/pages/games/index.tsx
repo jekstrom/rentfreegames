@@ -15,31 +15,74 @@ import StarIcon from '@mui/icons-material/Star'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import Typography from '@mui/material/Typography'
 import React from 'react'
+import useSWR from 'swr'
+import { useSession } from 'next-auth/react'
+import { User, Game } from '../../interfaces'
 
-export default function Games({
-    allGamesData,
-    page
-}: {
-    allGamesData: {
-        BGGId: number
-        Name: string
-        Rank: number
-    }[],
-    page: number
-}) {
-    const [starred, setStarred] = React.useState([-1]);
+const postData = async (url: string, data: any) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        body: JSON.stringify(data)
+    });
 
-    const handleToggle = (value: number) => () => {
-        const currentIndex = starred.indexOf(value);
-        const newStarred = [...starred];
+    const json = await response.json();
+    return json
+}
 
-        if (currentIndex === -1) {
-            newStarred.push(value);
+const deleteData = async (url: string, data: any) => {
+    const response = await fetch(url, {
+        method: 'DELETE',
+        mode: 'cors',
+        body: JSON.stringify(data)
+    });
+
+    const json = await response.json();
+    return json
+}
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+export default function Games() {
+    const { data, error, isLoading } = useSWR<{ message: string, games: Game[]}>('/api/games', fetcher);
+
+    const { data: session, status } = useSession();
+    const userEmail = session?.user.email;
+    //const [starred, setStarred] = React.useState([-1]);
+    const [allGames, starGame] = React.useState([]);
+
+    if (error) {
+        console.log("Failed to load");
+        return <div>Failed to load</div>
+    }
+    if (isLoading) {
+        console.log("Loading...");
+        return <div>Loading...</div>
+    }
+    if (!data) {
+        console.log("data: ", data);
+        return null;
+    }
+
+    const handleToggle = (bggId: string) => async () => {
+        const currentGames = allGames.length === 0 ? data.games : [...allGames];
+        const selectedGame = currentGames.find(g => g.BGGId === bggId);
+
+        if (!selectedGame.owned) {
+            selectedGame.owned = true;
+            if (status === "authenticated") {
+                const response = await postData("/api/usergames", { userEmail, bggId });
+                console.log(response);
+            }
         } else {
-            newStarred.splice(currentIndex, 1);
+            selectedGame.owned = false;
+            if (status === "authenticated") {
+                const response = await deleteData("/api/usergames", { userEmail, bggId });
+                console.log(response);
+            }
         }
 
-        setStarred(newStarred);
+        starGame(currentGames);
     };
 
     return (
@@ -49,39 +92,42 @@ export default function Games({
             </Head>
             <section className={utilStyles.headingMd}>
                 <p>All Games</p>
+                <div>
+                    length {data?.games?.length}
+                </div>
                 <Search />
             </section>
             <List
                 sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
                 aria-label="games"
             >
-                {allGamesData.map(({ BGGId, Name, Rank }, index) => (
+                {data?.games?.map(({ BGGId, Name, Rank, owned }) => (
                     <ListItem disablePadding key={BGGId}>
-                        <ListItemButton role={undefined} onClick={handleToggle(index)}>
-                        <ListItemText
-                            primary={Name}
-                            secondary={
-                                <React.Fragment>
-                                    <Typography
-                                        sx={{ display: 'inline' }}
-                                        component="span"
-                                        variant="body2"
-                                        color="text.primary"
-                                    >
-                                        Rank:
-                                    </Typography>
-                                    {Rank}
-                                </React.Fragment>
-                            }
-                        />
-                        
+                        <ListItemButton role={undefined} onClick={handleToggle(BGGId)}>
+                            <ListItemText
+                                primary={Name}
+                                secondary={
+                                    <React.Fragment>
+                                        <Typography
+                                            sx={{ display: 'inline' }}
+                                            component="span"
+                                            variant="body2"
+                                            color="text.primary"
+                                        >
+                                            Rank:
+                                        </Typography>
+                                        {Rank}
+                                    </React.Fragment>
+                                }
+                            />
+
                             <ListItemIcon>
                                 {
-                                    starred.indexOf(index) !== -1 ? <StarIcon/> : <StarOutlineIcon/>
+                                    owned ? <StarIcon /> : <StarOutlineIcon />
                                 }
                             </ListItemIcon>
                         </ListItemButton>
-                        <Link href={`/games/${BGGId}`}><ArrowForwardIcon/></Link>
+                        <Link href={`/games/${BGGId}`}><ArrowForwardIcon /></Link>
                     </ListItem>
                 ))}
             </List>
@@ -89,11 +135,11 @@ export default function Games({
     )
 }
 
-export const getStaticProps: GetStaticProps = async () => {
-    const allGamesData = await getSortedGamesData();
-    return {
-        props: {
-            allGamesData
-        }
-    }
-}
+// export const getStaticProps: GetStaticProps = async () => {
+//     const allGamesData = await getSortedGamesData();
+//     return {
+//         props: {
+//             allGamesData
+//         }
+//     }
+// }

@@ -1,18 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { CosmosClient } from '@azure/cosmos'
 import { Profile } from 'next-auth';
+import { User, Game } from '../interfaces';
 
 const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
 const client = new CosmosClient({ endpoint, key });
-
-export interface User {
-    id: string,
-    email: string,
-    image: string,
-    name: string,
-    sub: string
-}
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     console.log("USER ENDPOINT")
@@ -66,7 +59,8 @@ export async function postUserData(profile: Profile): Promise<User> {
                 email: profile.email,
                 image: profile.image,
                 name: profile.name,
-                sub: profile.sub
+                sub: profile.sub,
+                games: []
             }
         );
     
@@ -82,10 +76,109 @@ export async function postUserData(profile: Profile): Promise<User> {
             email: result.resource.email,
             image: result.resource.image,
             name: result.resource.name,
-            sub: result.resource.sub
+            sub: result.resource.sub,
+            games: []
         };
     }
     catch (ex) {
         console.log("Exception postUserData: ", ex);
+    }
+}
+
+export async function addGame(email: string, game: Game): Promise<User> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+    
+    const { resources } = await container.items
+    .query({
+        query: "SELECT * from u WHERE u.email = @email",
+        parameters: [{ name: "@email", value: email }]
+    })
+    .fetchAll();
+
+    for (const user of resources) {
+        console.log(`${user.id}, ${user.email} is a user with games: ${user.games} `);
+    }
+    const user = resources.find((u) => u.email === email) as User;
+    
+    try {
+        if (!user.games) {
+            user.games = [];
+        }
+        if (!user.games.some((g) => g.BGGId === game.BGGId)) {
+            user.games.push(game);
+        }
+
+        const result = await container.items.upsert(
+            {
+                id: user.email,
+                email: user.email,
+                image: user.image,
+                name: user.name,
+                sub: user.sub,
+                games: user.games
+            }
+        );
+    
+
+        if (result.statusCode != 200) {
+            console.log(result.statusCode);
+            console.log(result.substatus);
+            return null;
+        }
+
+        return user;
+    }
+    catch (ex) {
+        console.log("Exception addGame: ", ex);
+    }
+}
+
+export async function removeGame(email: string, bggId: string): Promise<User> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+
+    const { resources } = await container.items
+    .query({
+        query: "SELECT * from u WHERE u.email = @email",
+        parameters: [{ name: "@email", value: email }]
+    })
+    .fetchAll();
+
+    for (const user of resources) {
+        console.log(`${user.id}, ${user.email} is a user with games: ${user.games} `);
+    }
+    const user = resources.find((u) => u.email === email) as User;
+    
+    try {
+        if (!user.games) {
+            user.games = [];
+        }
+        if (user.games.some((g) => g.BGGId === bggId)) {
+            user.games = user.games.filter((g) => g.BGGId !== bggId);
+        }
+
+        const result = await container.items.upsert(
+            {
+                id: user.email,
+                email: user.email,
+                image: user.image,
+                name: user.name,
+                sub: user.sub,
+                games: user.games
+            }
+        );
+    
+
+        if (result.statusCode != 200) {
+            console.log(result.statusCode);
+            console.log(result.substatus);
+            return null;
+        }
+
+        return user;
+    }
+    catch (ex) {
+        console.log("Exception removeGame: ", ex);
     }
 }

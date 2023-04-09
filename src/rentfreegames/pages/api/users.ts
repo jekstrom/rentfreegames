@@ -1,30 +1,26 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { CosmosClient } from '@azure/cosmos'
-
-const endpoint = process.env.DB_ENDPOINT;
-const key = process.env.DB_KEY;
-const client = new CosmosClient({ endpoint, key });
+import { getServerSession } from "next-auth/next"
+import { authOptions } from './auth/[...nextauth]'
+import { getUserData } from '../../lib/users'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-    console.log("USER ENDPOINT")
-    const results = {}
-    const { database } = await client.databases.createIfNotExists({ id: "Test Database" });
-    console.log(database.id);
-    const { container } = await database.containers.createIfNotExists({ id: "Test Database" });
-    console.log(container.id);
+    const session = await getServerSession(req, res, authOptions);
 
-    const { resources } = await container.items
-    .query({
-        query: "SELECT * from c WHERE c.isCapitol = @isCapitol",
-        parameters: [{ name: "@isCapitol", value: true }]
-    })
-    .fetchAll();
-
-    for (const city of resources) {
-        console.log(`${city.name}, ${city.state} is a capitol `);
+    if (!session?.user?.email) {
+        res.status(401).json({ message: "You must be logged in." });
+        return;
     }
 
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'application/json')
-    res.end(JSON.stringify({ results }))
+    if (req.method === 'GET') {
+        const userData = await getUserData(session.user.email);
+
+        return res.json({
+            message: 'Success',
+            user: userData
+        });
+    }
+
+    return res.json({
+        message: 'Success'
+    });
 }

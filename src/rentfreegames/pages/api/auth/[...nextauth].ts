@@ -1,8 +1,9 @@
 import NextAuth from 'next-auth'
+import type { NextAuthOptions } from 'next-auth'
 import GithubProvider from 'next-auth/providers/github'
 import { getUserData, postUserData } from '../../../lib/users'
 
-export default NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID,
@@ -20,4 +21,6 @@ export default NextAuth({
       return !!userData; // Signed in users should always have a data record.
     }
   }
-})
+}
+
+export default NextAuth(authOptions);
