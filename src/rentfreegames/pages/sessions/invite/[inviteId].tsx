@@ -51,7 +51,7 @@ export default function SessionDetails() {
     return (
         <Layout>
             <Head>
-                <title>{data.title}</title>
+                <title>{data.title} invite - RFG</title>
             </Head>
             {
                 !data?.users ? <ErrorPage statusCode={404} /> : <></>

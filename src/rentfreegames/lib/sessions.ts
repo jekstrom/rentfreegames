@@ -1,5 +1,6 @@
-import { CosmosClient } from '@azure/cosmos'
+import { CosmosClient } from '@azure/cosmos';
 import { Session, User } from '../interfaces';
+import { nanoid } from 'nanoid/non-secure';
 
 const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
@@ -18,7 +19,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
         id: crypto.randomUUID(),
         title: title,
         created: new Date().toUTCString(),
-        inviteId: crypto.randomUUID(),
+        inviteId: `inv--${nanoid()}`,
         users: [user]
       }
     );

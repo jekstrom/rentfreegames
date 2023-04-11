@@ -11,26 +11,31 @@ declare module '@mui/material/styles' {
     }
 }
 
-// #ffd42a, #9955ff, #CBC5EA, #61c9a8, #01161e
 const dark = '#13293D';
+const veronica = '#9147FF';
+const lavender = '#CBC5EA';
+const gold = '#ffd42a';
+const mint = '#61c9a8';
+const richBlack = '#01161e';
+const brains = '#762866'
 
 export const theme = createTheme({
     palette: {
         primary: {
-            light: '#CBC5EA',
-            main: '#9955ff',
+            light: lavender,
+            main: veronica,
             dark: dark,
             contrastText: '#fff',
         },
         secondary: {
-            light: '#ffd42a',
-            main: '#61c9a8',
+            light: gold,
+            main: mint,
             dark: dark,
             contrastText: '#000',
         },
         background: {
-            default: '#01161e',
-            paper: '#01161e'
+            default: richBlack,
+            paper: richBlack
         },
         mode: 'dark',
         // Used by `getContrastText()` to maximize the contrast between

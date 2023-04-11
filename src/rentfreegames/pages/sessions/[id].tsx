@@ -44,7 +44,7 @@ export default function SessionDetails() {
     return (
         <Layout>
             <Head>
-                <title>{data.title}</title>
+                <title>{data.title} - RFG</title>
             </Head>
             <article>
                 <h1 className={utilStyles.headingXl}>{data.title}</h1>
