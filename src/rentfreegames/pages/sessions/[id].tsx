@@ -38,7 +38,7 @@ export default function SessionDetails() {
     }
 
     const copy = () => {
-        navigator.clipboard.writeText(data.inviteId);
+        navigator.clipboard.writeText(new URL(`sessions/invite/${data.inviteId}`, window.location.origin).href);
     }
 
     return (

@@ -27,9 +27,14 @@ export default function SessionModal() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const uuidRegex = /[0-9a-f]+-[0-9a-f]+-.*/
+        const uuidRegex = /^[0-9a-f]+-[0-9a-f]+-.*/
+        const inviteRegex = /invite\/[0-9a-f]+-[0-9a-f]+-.*/
         if (title && title.match(uuidRegex)){
             router.push(`/sessions/invite/${title}`)
+        } else if(title && title.match(inviteRegex)) {
+            // Get the invite code from the URL
+            const inviteCode = title.split("invite/")[1];
+            router.push(`/sessions/invite/${inviteCode}`)
         } else if (title && status === "authenticated") {
             const response = await postData("/api/sessions", { title });
             router.push(`/sessions/${response.id}`)
