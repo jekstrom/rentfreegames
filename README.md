@@ -98,3 +98,14 @@ azure functions serverless
 ### Frontend
 react/redux
 next.js?
+
+### Mobile
+Add ability to swipe left/right on games in a session
+If multiple people swipe right on the same game, then that game is promoted in the session
+
+### Future
+Review hosts
+
+publish public games session
+
+expire game sessions

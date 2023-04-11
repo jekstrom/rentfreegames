@@ -22,10 +22,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     })
     .fetchAll();
 
-    for (const city of resources) {
-        console.log(`${city.name}, ${city.state} is a capitol `);
-    }
-
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/json')
     res.end(JSON.stringify({ results }))
@@ -42,9 +38,6 @@ export async function getUserData(email: string): Promise<User> {
     })
     .fetchAll();
 
-    for (const user of resources) {
-        console.log(`${user.id}, ${user.email} is a user `);
-    }
     return resources.find((u) => u.email === email);
 }
 
@@ -96,9 +89,6 @@ export async function addGame(email: string, game: Game): Promise<User> {
     })
     .fetchAll();
 
-    for (const user of resources) {
-        console.log(`${user.id}, ${user.email} is a user with games: ${user.games} `);
-    }
     const user = resources.find((u) => u.email === email) as User;
     
     try {
@@ -145,9 +135,6 @@ export async function removeGame(email: string, bggId: string): Promise<User> {
     })
     .fetchAll();
 
-    for (const user of resources) {
-        console.log(`${user.id}, ${user.email} is a user with games: ${user.games} `);
-    }
     const user = resources.find((u) => u.email === email) as User;
     
     try {

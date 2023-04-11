@@ -2,8 +2,6 @@ import Head from 'next/head'
 import Layout, { siteTitle } from '../../components/layout'
 import utilStyles from '../../styles/utils.module.css'
 import Link from 'next/link'
-import { GetStaticProps } from 'next'
-import { getSortedGamesData } from '../../lib/games'
 import Search from '../../components/search'
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -17,7 +15,7 @@ import Typography from '@mui/material/Typography'
 import React from 'react'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
-import { User, Game } from '../../interfaces'
+import { Game } from '../../interfaces'
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -44,11 +42,10 @@ const deleteData = async (url: string, data: any) => {
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function Games() {
-    const { data, error, isLoading } = useSWR<{ message: string, games: Game[]}>('/api/games', fetcher);
+    const { data, error, isLoading } = useSWR<Game[]>('/api/games', fetcher);
 
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
-    //const [starred, setStarred] = React.useState([-1]);
     const [allGames, starGame] = React.useState([]);
 
     if (error) {
@@ -65,7 +62,7 @@ export default function Games() {
     }
 
     const handleToggle = (bggId: string) => async () => {
-        const currentGames = allGames.length === 0 ? data.games : [...allGames];
+        const currentGames = allGames.length === 0 ? data : [...allGames];
         const selectedGame = currentGames.find(g => g.BGGId === bggId);
 
         if (!selectedGame.owned) {
@@ -93,7 +90,7 @@ export default function Games() {
             <section className={utilStyles.headingMd}>
                 <p>All Games</p>
                 <div>
-                    length {data?.games?.length}
+                    length {data?.length}
                 </div>
                 <Search />
             </section>
@@ -101,7 +98,7 @@ export default function Games() {
                 sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
                 aria-label="games"
             >
-                {data?.games?.map(({ BGGId, Name, Rank, owned }) => (
+                {!data || data?.map(({ BGGId, Name, Rank, owned }) => (
                     <ListItem disablePadding key={BGGId}>
                         <ListItemButton role={undefined} onClick={handleToggle(BGGId)}>
                             <ListItemText
@@ -122,8 +119,8 @@ export default function Games() {
                             />
 
                             <ListItemIcon>
-                                {
-                                    owned ? <StarIcon /> : <StarOutlineIcon />
+                            {
+                                    owned ? <StarIcon sx={{ color: 'secondary.light', p: 0 }} /> : <StarOutlineIcon sx={{ color: 'primary.main', p: 0 }} />
                                 }
                             </ListItemIcon>
                         </ListItemButton>
@@ -134,12 +131,3 @@ export default function Games() {
         </Layout>
     )
 }
-
-// export const getStaticProps: GetStaticProps = async () => {
-//     const allGamesData = await getSortedGamesData();
-//     return {
-//         props: {
-//             allGamesData
-//         }
-//     }
-// }

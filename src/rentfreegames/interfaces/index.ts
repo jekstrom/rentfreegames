@@ -23,7 +23,8 @@ export interface Game {
     Family: string
     ImagePath: string
     Rank: string,
-    owned?: boolean
+    owned?: boolean,
+    ownedBy?: string
 }
 
 export interface User {
@@ -33,4 +34,13 @@ export interface User {
     name: string,
     sub: string
     games: Game[]
+}
+
+export interface Session {
+    id: string,
+    title: string,
+    created: Date,
+    inviteId: string,
+    users: User[],
+    games?: Game[]
 }

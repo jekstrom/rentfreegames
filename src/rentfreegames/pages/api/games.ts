@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from './auth/[...nextauth]'
-import { getSortedGamesData } from '../../lib/games'
+import { getSortedGamesData, searchGames } from '../../lib/games'
 import { getUserData } from '../../lib/users'
+import { Game } from '../../interfaces'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req, res, authOptions);
@@ -14,7 +15,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (req.method === 'GET') {
         const userData = await getUserData(session.user.email);
-        let games = await getSortedGamesData();
+        const { query } = req
+        const { q } = query
+
+        let games = [] as Game[];
+        if (q) {
+            games = await searchGames(q as string);
+        } else {
+            games = await getSortedGamesData();
+        }
 
         games = games.map(game => {
             game.owned = userData.games.some(userGame => userGame.BGGId === game.BGGId);
@@ -22,10 +31,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return game;
         });
 
-        return res.json({
-            message: 'Success',
-            games: games
-        });
+        return games
+        ? res.status(200).json(games)
+        : res.status(404).json({ message: `Games with query ${q} not found.` })
     }
 
     return res.json({

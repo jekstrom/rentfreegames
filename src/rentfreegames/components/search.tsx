@@ -20,7 +20,7 @@ export default function Search() {
       fetch(searchEndpoint(query))
         .then(res => res.json())
         .then(res => {
-          setResults(res.results)
+          setResults(res)
         })
     } else {
       setResults([])
@@ -45,16 +45,24 @@ export default function Search() {
       ref={searchRef}
     >
       <Box
-      component="form"
-      sx={{
-        '& .MuiTextField-root': { m: 1, width: '25ch' },
-      }}
-      noValidate
-      autoComplete="off"
-    >
-      <TextField id="outlined-search" label="Search field" type="search" value={query} onChange={onChange} onFocus={onFocus} />
-    </Box>
-      { active && results.length > 0 && (
+        component="form"
+        sx={{
+          '& .MuiTextField-root': { m: 1, width: '25ch' },
+        }}
+        noValidate
+        autoComplete="off"
+      >
+        <TextField
+          id="outlined-search" 
+          label="Search field"
+          type="search" 
+          value={query} 
+          onChange={onChange} 
+          onFocus={onFocus} 
+          sx={{ color: 'primary.contrastText', p: 0 }}
+        />
+      </Box>
+      {active && results?.length > 0 && (
         <ul className={styles.results}>
           {results.map(({ BGGId, Name }) => (
             <li className={styles.result} key={BGGId}>
@@ -64,7 +72,7 @@ export default function Search() {
             </li>
           ))}
         </ul>
-      ) }
+      )}
     </div>
   )
 }

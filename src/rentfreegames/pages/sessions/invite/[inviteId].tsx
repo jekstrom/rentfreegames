@@ -1,34 +1,32 @@
-import Layout from '../../components/layout'
-import { getSessionData } from '../../lib/sessions'
+import Layout from '../../../components/layout'
 import Head from 'next/head'
-import Date from '../../components/date'
-import utilStyles from '../../styles/utils.module.css'
-import { GetStaticProps, GetStaticPaths } from 'next'
+import utilStyles from '../../../styles/utils.module.css'
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import Typography from '@mui/material/Typography'
-import Link from 'next/link'
+import Button from '@mui/material/Button';
 import React from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/router'
-import { Session, ResponseError } from '../../interfaces'
-import GamesList from '../../components/gameList'
+import { useSession } from 'next-auth/react'
+import { Session, ResponseError } from '../../../interfaces'
+import GamesList from '../../../components/gameList';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function SessionDetails() {
+    const { data: session, status } = useSession();
+    const userEmail = session?.user.email;
+
     const { query } = useRouter()
     const { data, error, isLoading, isValidating } = useSWR<
       Session,
       ResponseError
-    >(() => (query.id ? `/api/sessions/${query.id}` : null), fetcher)
+    >(() => (query.inviteId ? `/api/sessions/invite/${query.inviteId}` : null), fetcher)
 
     if (error) {
-        console.log("Failed to load");
+        console.log("Failed to load: ", error);
         return <div>Failed to load</div>
     }
     if (isLoading) {
@@ -40,6 +38,14 @@ export default function SessionDetails() {
         return null;
     }
 
+    const joinSession = () => {
+        console.log("Joining session");
+    };
+
+    const leaveSession = () => {
+        console.log("Leaving session");
+    };
+
     return (
         <Layout>
             <Head>
@@ -48,6 +54,13 @@ export default function SessionDetails() {
             <article>
                 <h1 className={utilStyles.headingXl}>{data.title}</h1>
             </article>
+            <section>
+                {
+                   data.users.some(u => u.email === userEmail) 
+                   ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
+                   : <Button variant="outlined" onClick={joinSession}>Join session</Button> 
+                }
+            </section>
             <article>
                 <h2 className={utilStyles.headingXl}>Players</h2>
             </article>
@@ -58,13 +71,21 @@ export default function SessionDetails() {
                 {data?.users?.map(({ email, name }) => (
                     <ListItem disablePadding key={email}>
                         <ListItemButton role={undefined}>
-                            <ListItemText primary={name} />
+                            <ListItemText 
+                                sx={
+                                    email === userEmail 
+                                    ? { bgcolor: 'primary.main', color: 'primary.contrastText', p: 2 } 
+                                    : { bgcolor: 'secondary.main', color: 'primary.contrastText', p: 2 }
+                                } 
+                                primary={name}
+                                secondary="Host" // todo: determine host
+                            />
                         </ListItemButton>
                     </ListItem>
                 ))}
             </List>
 
-            <GamesList games={data?.games} />
+            <GamesList games={data.games} />
         </Layout>
     )
 }
