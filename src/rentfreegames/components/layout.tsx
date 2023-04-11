@@ -5,6 +5,7 @@ import utilStyles from '../styles/utils.module.css'
 import Link from 'next/link'
 import { ThemeProvider } from '@mui/material'
 import { theme } from '../styles/theme'
+import CssBaseline from '@mui/material/CssBaseline';
 
 const name = 'rentfreegames'
 export const siteTitle = 'rentfreegames'
@@ -40,6 +41,7 @@ export default function Layout({
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <header className={styles.header}>
           {home ? (
             <>
@@ -74,7 +76,9 @@ export default function Layout({
           )}
         </header>
         
-        <main>{children}</main>
+        <main>
+          {children}
+        </main>
       </ThemeProvider>
     </div>
   )

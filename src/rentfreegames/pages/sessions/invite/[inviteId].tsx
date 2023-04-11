@@ -1,17 +1,19 @@
-import Layout from '../../../components/layout'
-import Head from 'next/head'
-import utilStyles from '../../../styles/utils.module.css'
+import Button from '@mui/material/Button';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
-import Button from '@mui/material/Button';
-import React from 'react'
-import useSWR from 'swr'
-import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
-import { Session, ResponseError } from '../../../interfaces'
+import { useSession } from 'next-auth/react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import React from 'react';
+import useSWR from 'swr';
 import GamesList from '../../../components/gameList';
+import Layout from '../../../components/layout';
+import PlayerList from '../../../components/playersList';
+import { ResponseError, Session } from '../../../interfaces';
+import utilStyles from '../../../styles/utils.module.css';
+import ErrorPage from 'next/error'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -21,8 +23,8 @@ export default function SessionDetails() {
 
     const { query } = useRouter()
     const { data, error, isLoading, isValidating } = useSWR<
-      Session,
-      ResponseError
+        Session,
+        ResponseError
     >(() => (query.inviteId ? `/api/sessions/invite/${query.inviteId}` : null), fetcher)
 
     if (error) {
@@ -51,41 +53,31 @@ export default function SessionDetails() {
             <Head>
                 <title>{data.title}</title>
             </Head>
+            {
+                !data?.users ? <ErrorPage statusCode={404} /> : <></>
+            }
             <article>
                 <h1 className={utilStyles.headingXl}>{data.title}</h1>
             </article>
             <section>
                 {
-                   data.users.some(u => u.email === userEmail) 
-                   ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
-                   : <Button variant="outlined" onClick={joinSession}>Join session</Button> 
+                    data?.users ?
+                        data?.users?.some(u => u.email === userEmail)
+                            ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
+                            : <Button variant="contained" sx={{ width: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }} onClick={joinSession}>Join session</Button>
+                        : <></>
                 }
             </section>
-            <article>
-                <h2 className={utilStyles.headingXl}>Players</h2>
-            </article>
-            <List
-                sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
-                aria-label="players"
-            >
-                {data?.users?.map(({ email, name }) => (
-                    <ListItem disablePadding key={email}>
-                        <ListItemButton role={undefined}>
-                            <ListItemText 
-                                sx={
-                                    email === userEmail 
-                                    ? { bgcolor: 'primary.main', color: 'primary.contrastText', p: 2 } 
-                                    : { bgcolor: 'secondary.main', color: 'primary.contrastText', p: 2 }
-                                } 
-                                primary={name}
-                                secondary="Host" // todo: determine host
-                            />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
+            {
+                data?.users 
+                    ? (
+                    <section>
+                        <PlayerList players={data.users} userEmail={userEmail} />
 
-            <GamesList games={data.games} />
+                        <GamesList games={data.games} />
+                    </section>) 
+                    : <></>
+            }
         </Layout>
     )
 }

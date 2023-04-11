@@ -19,10 +19,10 @@ export default function GamesList({
     return (
         <div>
             <article>
-                <h2 className={utilStyles.headingXl}>Games</h2>
+                <h2 className={utilStyles.headingMd}>Games</h2>
             </article>
             <List
-                sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+                sx={{ width: '100%', bgcolor: 'background.paper' }}
                 aria-label="players"
             >
                 {!games || games?.map(({ BGGId, Name, Rank, owned, ownedBy }) => (

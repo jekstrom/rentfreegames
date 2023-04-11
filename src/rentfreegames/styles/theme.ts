@@ -12,21 +12,27 @@ declare module '@mui/material/styles' {
 }
 
 // #ffd42a, #9955ff, #CBC5EA, #61c9a8, #01161e
+const dark = '#13293D';
 
 export const theme = createTheme({
     palette: {
         primary: {
             light: '#CBC5EA',
             main: '#9955ff',
-            dark: '#01161e',
+            dark: dark,
             contrastText: '#fff',
         },
         secondary: {
             light: '#ffd42a',
             main: '#61c9a8',
-            dark: '#01161e',
-            contrastText: '#fff',
+            dark: dark,
+            contrastText: '#000',
         },
+        background: {
+            default: '#01161e',
+            paper: '#01161e'
+        },
+        mode: 'dark',
         // Used by `getContrastText()` to maximize the contrast between
         // the background and the text.
         contrastThreshold: 3,
@@ -35,4 +41,18 @@ export const theme = createTheme({
         // E.g., shift from Red 500 to Red 300 or Red 700.
         tonalOffset: 0.2,
     },
+    components: {
+        // Name of the component
+        MuiButton: {
+            styleOverrides: {
+                // Name of the slot
+                root: {
+                  // Some CSS
+                  "&:hover": {
+                    backgroundColor: dark,
+                  },
+                },
+              },
+        },
+      },
 });
