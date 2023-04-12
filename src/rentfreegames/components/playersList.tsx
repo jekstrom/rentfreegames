@@ -39,9 +39,11 @@ function stringAvatar(name: string) {
 export default function PlayerList({
     players,
     userEmail,
+    host
 }: {
     players: User[],
-    userEmail: string
+    userEmail: string,
+    host: User
 }) {
     return (
         <div>
@@ -49,12 +51,12 @@ export default function PlayerList({
                 <h2 className={utilStyles.headingMd}>Players</h2>
             </article>
             <List
-                sx={{ width: '100%', bgcolor: 'background.paper' }}
+                sx={{ maxWidth: '20rem', bgcolor: 'background.paper' }}
                 aria-label="players"
             >
                 {players?.map(({ email, name }) => (
                     <ListItem disablePadding key={email}>
-                        <ListItemButton role={undefined}>
+                        <ListItemButton disableGutters role={undefined} sx={{ padding: '0' }}>
                             <ListItemText
                                 sx={
                                     email === userEmail
@@ -62,8 +64,9 @@ export default function PlayerList({
                                         : { bgcolor: 'secondary.main', color: 'primary.contrastText', p: 2 }
                                 }
                                 primary={
+                                    name ?
                                     <React.Fragment>
-                                        <Grid container spacing={2}>
+                                        <Grid container spacing={1}>
                                             <Grid item>
                                                 <Avatar {...stringAvatar(name)} />
                                             </Grid>
@@ -72,8 +75,9 @@ export default function PlayerList({
                                             </Grid>
                                         </Grid>
                                     </React.Fragment>
+                                    : email
                                 }
-                                secondary="Host" // todo: determine host
+                                secondary={host.email === email ? 'Host' : ''}
                             />
                         </ListItemButton>
                     </ListItem>

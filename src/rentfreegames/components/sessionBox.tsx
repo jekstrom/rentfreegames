@@ -24,7 +24,6 @@ export default function SessionModal() {
     const [title, setTitle] = React.useState("");
     const router = useRouter();
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const inviteRegex = /invite\/inv--.*/

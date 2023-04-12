@@ -13,12 +13,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const { query } = req
     const { id } = query
+    if (!id) {
+        res.status(400).json({ message: "Missing id." });
+        return;
+    }
 
     console.log("Getting session data for id: " + id);
 
     let gameSessions = await getSessionData(id as string, userSession.user.email);
+    let gameSession = gameSessions[0];
 
-    return gameSessions
-        ? res.status(200).json(gameSessions[0])
+    return gameSession
+        ? res.status(200).json(gameSession)
         : res.status(404).json({ message: `User with id: ${id} not found.` })
 }

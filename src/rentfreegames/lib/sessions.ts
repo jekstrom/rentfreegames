@@ -20,6 +20,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
         title: title,
         created: new Date().toUTCString(),
         inviteId: `inv--${nanoid()}`,
+        createdBy: user,
         users: [user]
       }
     );
@@ -36,6 +37,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
       title: result.resource.title,
       created: new Date(result.resource.created),
       inviteId: result.resource.inviteId,
+      createdBy: result.resource.createdBy,
       users: result.resource.users
     };
   }
@@ -44,21 +46,46 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
   }
 }
 
-function flattenGames(gameSessions: Session[], email?: string) {
-  // flatten gameSessions.users.games to just gameSessions.games
-  return gameSessions.map(session => {
-    session.games = session.users.flatMap(user => {
-      return user.games.map(g => {
-        g.ownedBy = user.name
-        g.owned = email && user.email === email;
-        return g;
-      });
-    }).filter((game, index, self) =>
-      self.findIndex(g => g.BGGId === game.BGGId) === index
-    )
+export async function addSessionUser(sessionId: string, user: User, inviteId: string): Promise<Session> {
+  const { database } = await client.databases.createIfNotExists(DATABASE);
+  const { container } = await database.containers.createIfNotExists(CONTAINER);
 
-    return session;
-  });
+  try {
+    const existingSessions = await getSessionData(sessionId);
+    if (existingSessions[0].inviteId !== inviteId) {
+      return null;
+    }
+    const existingSession = existingSessions[0];
+
+    const result = await container.items.upsert(
+      {
+        id: existingSession.id,
+        title: existingSession.title,
+        created: existingSession.created,
+        inviteId: existingSession.inviteId,
+        createdBy: existingSession.createdBy,
+        users: [...existingSession.users, user]
+      }
+    );
+
+    if (result.statusCode >= 400) {
+      console.log(result.statusCode);
+      console.log(result.substatus);
+      return null;
+    }
+
+    return {
+      id: result.resource.id,
+      title: result.resource.title,
+      created: new Date(result.resource.created),
+      inviteId: result.resource.inviteId,
+      createdBy: result.resource.createdBy,
+      users: result.resource.users
+    };
+  }
+  catch (ex) {
+    console.log("Exception postSessionData: ", ex);
+  }
 }
 
 export async function getSessionData(id?: string, email?: string): Promise<Session[]> {
@@ -79,7 +106,7 @@ export async function getSessionData(id?: string, email?: string): Promise<Sessi
     let gameSessions = [] as Session[];
     gameSessions = resources.map(r => r as Session);
 
-    return flattenGames(gameSessions, email);
+    return gameSessions;
   } else {
     const { resources } = await container.items
       .query({
@@ -89,8 +116,55 @@ export async function getSessionData(id?: string, email?: string): Promise<Sessi
 
     let gameSessions = [] as Session[];
     gameSessions = resources.map(r => r as Session);
-    return flattenGames(gameSessions, email);
+    return gameSessions;
   }
+}
+
+export async function updateUserGameSessions(user: User): Promise<Session[]> {
+  const { database } = await client.databases.createIfNotExists(DATABASE);
+  const { container } = await database.containers.createIfNotExists(CONTAINER);
+
+  if (user) {
+    const { resources } = await container.items
+      .query({
+        query: "SELECT * FROM c \
+        WHERE ARRAY_CONTAINS(c.users, {\"email\": \"@email\"},true)",
+        parameters: [{ name: "@email", value: user.email }]
+      })
+      .fetchAll();
+
+    if (resources && resources.length > 0) {
+      let gameSessions = [] as Session[];
+      gameSessions = resources.map(r => r as Session);
+
+      for (const gameSession of gameSessions) {
+        gameSession.users = gameSession.users.map(u => {
+          if (u.email === user.email) {
+            u.games = user.games;
+          }
+          return u;
+        });
+        const result = await container.items.upsert(
+          {
+            id: gameSession.id,
+            title: gameSession.title,
+            created: gameSession.created,
+            inviteId: gameSession.inviteId,
+            createdBy: gameSession.createdBy,
+            users: gameSession.users
+          }
+        );
+
+        if (result.statusCode >= 400) {
+          console.log(result.statusCode);
+          console.log(result.substatus);
+          return null;
+        }
+      }
+      return gameSessions;
+    }
+  }
+  return [];
 }
 
 export async function getSessionDataByInviteId(inviteId: string, email?: string): Promise<Session> {
@@ -110,5 +184,5 @@ export async function getSessionDataByInviteId(inviteId: string, email?: string)
   let gameSessions = [] as Session[];
   gameSessions = resources.map(r => r as Session);
 
-  return flattenGames(gameSessions, email)[0];
+  return gameSessions[0];
 }

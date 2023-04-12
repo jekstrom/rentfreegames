@@ -16,11 +16,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     console.log(container.id);
 
     const { resources } = await container.items
-    .query({
-        query: "SELECT * from c WHERE c.isCapitol = @isCapitol",
-        parameters: [{ name: "@isCapitol", value: true }]
-    })
-    .fetchAll();
+        .query({
+            query: "SELECT * from c WHERE c.isCapitol = @isCapitol",
+            parameters: [{ name: "@isCapitol", value: true }]
+        })
+        .fetchAll();
 
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/json')
@@ -30,21 +30,21 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 export async function getUserData(email: string): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
-    
-    const { resources } = await container.items
-    .query({
-        query: "SELECT * from u WHERE u.email = @email",
-        parameters: [{ name: "@email", value: email }]
-    })
-    .fetchAll();
 
-    return resources.find((u) => u.email === email);
+    const { resources } = await container.items
+        .query({
+            query: "SELECT * from u WHERE u.email = @email",
+            parameters: [{ name: "@email", value: email }]
+        })
+        .fetchAll();
+
+    return resources.find((u) => u.email === email) as User;
 }
 
 export async function postUserData(profile: Profile): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
-    
+
     try {
         const result = await container.items.create(
             {
@@ -56,7 +56,7 @@ export async function postUserData(profile: Profile): Promise<User> {
                 games: []
             }
         );
-    
+
 
         if (result.statusCode != 200) {
             console.log(result.statusCode);
@@ -81,16 +81,16 @@ export async function postUserData(profile: Profile): Promise<User> {
 export async function addGame(email: string, game: Game): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
-    
+
     const { resources } = await container.items
-    .query({
-        query: "SELECT * from u WHERE u.email = @email",
-        parameters: [{ name: "@email", value: email }]
-    })
-    .fetchAll();
+        .query({
+            query: "SELECT * from u WHERE u.email = @email",
+            parameters: [{ name: "@email", value: email }]
+        })
+        .fetchAll();
 
     const user = resources.find((u) => u.email === email) as User;
-    
+
     try {
         if (!user.games) {
             user.games = [];
@@ -109,7 +109,7 @@ export async function addGame(email: string, game: Game): Promise<User> {
                 games: user.games
             }
         );
-    
+
 
         if (result.statusCode != 200) {
             console.log(result.statusCode);
@@ -129,14 +129,14 @@ export async function removeGame(email: string, bggId: string): Promise<User> {
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
 
     const { resources } = await container.items
-    .query({
-        query: "SELECT * from u WHERE u.email = @email",
-        parameters: [{ name: "@email", value: email }]
-    })
-    .fetchAll();
+        .query({
+            query: "SELECT * from u WHERE u.email = @email",
+            parameters: [{ name: "@email", value: email }]
+        })
+        .fetchAll();
 
     const user = resources.find((u) => u.email === email) as User;
-    
+
     try {
         if (!user.games) {
             user.games = [];
@@ -155,7 +155,7 @@ export async function removeGame(email: string, bggId: string): Promise<User> {
                 games: user.games
             }
         );
-    
+
 
         if (result.statusCode != 200) {
             console.log(result.statusCode);

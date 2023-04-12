@@ -2,6 +2,11 @@ export type ResponseError = {
     message: string
 }
 
+export interface Owner {
+    email: string,
+    name?: string
+}
+
 export interface Game {
     BGGId: string
     Name: string
@@ -24,7 +29,7 @@ export interface Game {
     ImagePath: string
     Rank: string,
     owned?: boolean,
-    ownedBy?: string
+    ownedBy?: [Owner]
 }
 
 export interface User {
@@ -42,5 +47,6 @@ export interface Session {
     created: Date,
     inviteId: string,
     users: User[],
+    createdBy: User,
     games?: Game[]
 }
