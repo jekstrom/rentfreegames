@@ -32,7 +32,7 @@ function stringAvatar(name: string) {
         sx: {
             bgcolor: stringToColor(name),
         },
-        children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+        children: name.indexOf(' ') > 0 ? `${name.split(' ')[0][0]}${name.split(' ')[1][0]}` : `${name[0]}${name.split('@')[1][0]}`,
     };
 }
 
@@ -64,18 +64,16 @@ export default function PlayerList({
                                         : { bgcolor: 'secondary.main', color: 'primary.contrastText', p: 2 }
                                 }
                                 primary={
-                                    name ?
                                     <React.Fragment>
                                         <Grid container spacing={1}>
                                             <Grid item>
-                                                <Avatar {...stringAvatar(name)} />
+                                                <Avatar {...stringAvatar(name ?? email)} />
                                             </Grid>
-                                            <Grid item>
-                                                {name}
+                                            <Grid item style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                {name ?? email}
                                             </Grid>
                                         </Grid>
                                     </React.Fragment>
-                                    : email
                                 }
                                 secondary={host.email === email ? 'Host' : ''}
                             />

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import useSWR from 'swr';
 import GamesList from '../../../components/gameList';
+import GameTable from '../../../components/gameTable';
 import Layout from '../../../components/layout';
 import PlayerList from '../../../components/playersList';
 import { ResponseError, Session, Game, User } from '../../../interfaces';
@@ -103,9 +104,9 @@ export default function SessionDetails() {
                     <section>
                         <PlayerList players={data.gameSession.users} userEmail={userEmail} host={data.gameSession.createdBy} />
 
-                        <GamesList games={getUserGames(data.gameSession.users, userEmail)} title={"Session Games"} />
+                        <GameTable games={getUserGames(data.gameSession.users, userEmail)} title={"Session Games"} />
 
-                        <GamesList games={getUserGames([data.user], userEmail)} title={"Your Games"} />
+                        <GameTable games={getUserGames([data.user], userEmail)} title={"Your Games"} />
                     </section>) 
                     : <></>
             }

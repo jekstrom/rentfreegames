@@ -59,12 +59,7 @@ export default function GamesList({
                                     }
                                 />
                             <ListItemText primary={ownedBy.map(o => o.name ?? o.email).join(", ")} />
-                            <ListItemText secondary={
-                                BestPlayers != "0"
-                                ? `Players: ${BestPlayers}` 
-                                : `Players: ${MinPlayers} - ${MaxPlayers}`
-                            }
-                            />
+                            <ListItemText secondary={`Players: ${MinPlayers} - ${MaxPlayers}`}/>
                         </ListItem>
                         <ListItemIcon>
                                 {
