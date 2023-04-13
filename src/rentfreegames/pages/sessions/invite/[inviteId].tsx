@@ -8,7 +8,7 @@ import GamesList from '../../../components/gameList';
 import GameTable from '../../../components/gameTable';
 import Layout from '../../../components/layout';
 import PlayerList from '../../../components/playersList';
-import { ResponseError, Session, Game, User } from '../../../interfaces';
+import { ResponseError, Session, Game, User, Owner } from '../../../interfaces';
 import utilStyles from '../../../styles/utils.module.css';
 import ErrorPage from 'next/error'
 
@@ -25,6 +25,32 @@ const postData = async (url: string, data: any) => {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+function mergeGameOwners(games: Game[]): Game[] {
+    // Merge games' owners with same BGGId
+    for (const game of games.filter(g => g.owned)) {
+        const otherGame = games.find(g => g.BGGId === game.BGGId && g.ownedBy.every(o => game.ownedBy.indexOf(o) < 0));
+        if (otherGame) {
+            game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
+            otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
+            otherGame.owned = true;
+        }
+    }
+    return games;
+}
+
+function getUniqueGames(games: Game[]){ 
+    // Unique games by BGGId
+    let uniqueGames = Object.values(
+        games.reduce((acc, obj) => ({ ...acc, [obj.BGGId]: obj }), {})
+    ) as Game[];
+
+    // Remove duplicate owners
+    for (const game of uniqueGames) {
+        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.email]: obj }), {})) as [Owner];
+    }
+    return uniqueGames;
+}
+
 function getUserGames(users: User[], email: string): Game[] {
     let games: Game[] = [];
     users.forEach(user => {
@@ -35,10 +61,9 @@ function getUserGames(users: User[], email: string): Game[] {
         });
     });
 
-    // Return only unique games by BGGId
-    return Object.values(
-        games.reduce((acc, obj) => ({ ...acc, [obj.BGGId]: obj }), {})
-    );
+    games = mergeGameOwners(games);
+
+    return getUniqueGames(games);
 }
 
 export default function SessionDetails() {

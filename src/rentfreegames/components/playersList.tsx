@@ -56,12 +56,12 @@ export default function PlayerList({
             >
                 {players?.map(({ email, name }) => (
                     <ListItem disablePadding key={email}>
-                        <ListItemButton disableGutters role={undefined} sx={{ padding: '0' }}>
+                        <ListItem disableGutters role={undefined} sx={{ padding: '0' }}>
                             <ListItemText
                                 sx={
                                     email === userEmail
                                         ? { bgcolor: 'primary.main', color: 'primary.contrastText', p: 2 }
-                                        : { bgcolor: 'secondary.main', color: 'primary.contrastText', p: 2 }
+                                        : { bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }
                                 }
                                 primary={
                                     <React.Fragment>
@@ -77,7 +77,7 @@ export default function PlayerList({
                                 }
                                 secondary={host.email === email ? 'Host' : ''}
                             />
-                        </ListItemButton>
+                        </ListItem>
                     </ListItem>
                 ))}
             </List>
