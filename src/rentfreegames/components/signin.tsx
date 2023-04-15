@@ -2,6 +2,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { signIn, signOut, useSession } from "next-auth/react";
+import { DiscordIcon } from "./customIcons";
 
 export default function Signin() {
     const { data: session, status } = useSession()
@@ -31,7 +32,7 @@ export default function Signin() {
                 </Button>
             </Stack>
             <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
-                <Button variant="contained" onClick={() => signIn("discord")} sx={{ width: "100%" }}>
+                <Button variant="contained" endIcon={<DiscordIcon />} onClick={() => signIn("discord")} sx={{ width: "100%" }}>
                     Sign in using Discord
                 </Button>
             </Stack>
