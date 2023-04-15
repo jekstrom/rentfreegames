@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { CosmosClient } from '@azure/cosmos'
 import { Profile } from 'next-auth';
 import { User, Game } from '../interfaces';
+import { JWT } from 'next-auth/jwt';
 
 const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
@@ -51,6 +52,43 @@ export async function postUserData(profile: Profile): Promise<User> {
                 id: profile.email,
                 email: profile.email,
                 image: profile.image,
+                name: profile.name,
+                sub: profile.sub,
+                games: []
+            }
+        );
+
+
+        if (result.statusCode != 200) {
+            console.log(result.statusCode);
+            console.log(result.substatus);
+            return null;
+        }
+
+        return {
+            id: result.resource.id,
+            email: result.resource.email,
+            image: result.resource.image,
+            name: result.resource.name,
+            sub: result.resource.sub,
+            games: []
+        };
+    }
+    catch (ex) {
+        console.log("Exception postUserData: ", ex);
+    }
+}
+
+export async function postJWTUserData(profile: JWT): Promise<User> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+
+    try {
+        const result = await container.items.create(
+            {
+                id: profile.email,
+                email: profile.email,
+                image: profile.picture,
                 name: profile.name,
                 sub: profile.sub,
                 games: []

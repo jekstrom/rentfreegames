@@ -25,9 +25,19 @@ export default function Signin() {
 
     return (
         <>
-            <Stack direction="row" spacing={2} sx={{ m: 1 }}>
-                <Button variant="contained" endIcon={<GitHubIcon />} onClick={() => signIn("github")}>
+            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
+                <Button variant="contained" endIcon={<GitHubIcon />} onClick={() => signIn("github")} sx={{ width: "100%" }}>
                     Sign in using GitHub
+                </Button>
+            </Stack>
+            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
+                <Button variant="contained" onClick={() => signIn("discord")} sx={{ width: "100%" }}>
+                    Sign in using Discord
+                </Button>
+            </Stack>
+            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
+                <Button variant="contained" onClick={() => signIn("azure-ad-b2c")} sx={{ width: "100%" }}>
+                    Sign in with Email
                 </Button>
             </Stack>
         </>

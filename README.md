@@ -109,3 +109,5 @@ Review hosts
 publish public games session
 
 expire game sessions
+
+add a heart for a wishlist collection (inc. amazon affiliate links)
