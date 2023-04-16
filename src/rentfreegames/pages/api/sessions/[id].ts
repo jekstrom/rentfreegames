@@ -4,6 +4,13 @@ import { authOptions } from '../auth/[...nextauth]'
 import { getSessionData } from '../../../lib/sessions'
 import { getCategories, getMechanics } from '../../../lib/search'
 import { getUserData } from '../../../lib/users'
+import { User } from '../../../interfaces'
+
+function cleanUser(user: User) {
+    (user as any).email = null;
+    (user as any).sub = null;
+    return user;
+}
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const userSession = await getServerSession(req, res, authOptions);
@@ -12,7 +19,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(401).json({ message: "You must be logged in." });
         return;
     }
-    const userData = await getUserData(userSession.user.email);
+    const userData = cleanUser(await getUserData(userSession.user.email));
 
     const { query } = req
     const { id } = query

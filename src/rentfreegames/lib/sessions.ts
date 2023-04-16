@@ -9,20 +9,26 @@ const client = new CosmosClient({ endpoint, key });
 const DATABASE = { id: "Session Database" };
 const CONTAINER = { id: "Session Container" };
 
+function cleanUser(user: User) {
+  (user as any).email = null;
+  (user as any).sub = null;
+  return user;
+}
+
 export async function postSessionData(title: string, user: User): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   try {
-    (user as any).email = null;
+    const cleanedUser = cleanUser(user);
     const result = await container.items.create(
       {
         id: crypto.randomUUID(),
         title: title,
         created: new Date().toUTCString(),
         inviteId: `inv--${nanoid()}`,
-        createdBy: user,
-        users: [user]
+        createdBy: cleanedUser,
+        users: [cleanedUser]
       }
     );
 
@@ -132,7 +138,7 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   if (user) {
-    (user as any).email = null;
+    const cleanedUser = cleanUser(user);
     const { resources } = await container.items
       .query({
         query: "SELECT c FROM c \

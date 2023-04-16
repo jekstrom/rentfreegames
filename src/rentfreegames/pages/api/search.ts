@@ -2,9 +2,15 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from './auth/[...nextauth]'
 import { getUserData } from '../../lib/users'
-import { Game } from '../../interfaces'
+import { Game, User } from '../../interfaces'
 import * as redis from 'redis'
 import { getCategories, getMechanics, getSearchTitle, buildSearchQuery, ApiResponse } from '../../lib/search'
+
+function cleanUser(user: User) {
+    (user as any).email = null;
+    (user as any).sub = null;
+    return user;
+}
 
 const createCacheClient = async () => {
     try {
@@ -36,7 +42,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     let totalPages = 1;
 
     if (req.method === 'GET') {
-        const userData = await getUserData(session.user.email);
+        const userData = cleanUser(await getUserData(session.user.email));
+
         const { query } = req
         const { q } = query
         const { p } = query

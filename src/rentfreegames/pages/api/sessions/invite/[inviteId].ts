@@ -4,6 +4,14 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { getSessionDataByInviteId } from '../../../../lib/sessions'
 import { getUserData } from '../../../../lib/users'
 import { getMechanics, getCategories } from '../../../../lib/search'
+import { User } from '../../../../interfaces'
+
+function cleanUser(user: User) {
+    (user as any).email = null;
+    (user as any).sub = null;
+    return user;
+}
+
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const userSession = await getServerSession(req, res, authOptions);
@@ -13,7 +21,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return;
     }
 
-    const userData = await getUserData(userSession.user.email);
+    const userData = cleanUser(await getUserData(userSession.user.email));
 
     const { query } = req
     const { inviteId } = query
@@ -25,6 +33,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const mechanics = await getMechanics(today);
 
     return gameSession
-        ? res.status(200).json({gameSession, user: userData, mechanics, categories})
+        ? res.status(200).json({ gameSession, user: userData, mechanics, categories })
         : res.status(404).json({ message: `Session with invite id: ${inviteId} not found.` })
 }

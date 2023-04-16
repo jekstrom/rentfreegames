@@ -4,6 +4,13 @@ import { authOptions } from './auth/[...nextauth]'
 import { getGameData } from '../../lib/games'
 import { addGame, getUserData, removeGame } from '../../lib/users'
 import { updateUserGameSessions } from '../../lib/sessions'
+import { User } from '../../interfaces'
+
+function cleanUser(user: User) {
+    (user as any).email = null;
+    (user as any).sub = null;
+    return user;
+}
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getServerSession(req, res, authOptions);
@@ -12,7 +19,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(401).json({ message: "You must be logged in." });
         return;
     }
-    const userData = await getUserData(session.user.email);
+    const userData = cleanUser(await getUserData(session.user.email));
 
     if (req.method === 'POST') {
         const payload = JSON.parse(req.body);
