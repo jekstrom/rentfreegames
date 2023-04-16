@@ -59,7 +59,8 @@ export default function Games({
     }
     if (isLoading) {
         console.log("Loading...");
-        return <Layout><div style={{display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
+        return <Layout><div style={{display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
+        // return <Layout><div style={{display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
     }
     if (!data) {
         console.log("data: ", data);

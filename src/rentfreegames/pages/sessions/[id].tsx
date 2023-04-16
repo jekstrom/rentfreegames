@@ -55,7 +55,7 @@ export default function SessionDetails() {
     }
     if (isLoading) {
         console.log("Loading...");
-        return <Layout><div style={{ display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
+        return <Layout><div style={{display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
     }
     if (!data) {
         console.log("data: ", data);

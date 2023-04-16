@@ -133,7 +133,8 @@ export default function GameSearchResults({
     }
     if (isLoading) {
         console.log("Loading...");
-        return <CircularProgress />
+        return <img src="../public/Rentfreeanim.gif" />
+        // return <CircularProgress />
     }
     if (!data) {
         console.log("data: ", data);
