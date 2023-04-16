@@ -130,17 +130,22 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   if (user) {
+    console.log("Updating user:", user.email);
+
     const { resources } = await container.items
       .query({
-        query: "SELECT * FROM c \
-        WHERE ARRAY_CONTAINS(c.users, {\"email\": \"@email\"},true)",
+        query: "SELECT c FROM c \
+        JOIN users in c.users \
+        WHERE users.email = @email",
         parameters: [{ name: "@email", value: user.email }]
       })
       .fetchAll();
 
     if (resources && resources.length > 0) {
+      console.log("resources:", JSON.stringify(resources));
+
       let gameSessions = [] as Session[];
-      gameSessions = resources.map(r => r as Session);
+      gameSessions = resources.map(r => r.c as Session);
 
       for (const gameSession of gameSessions) {
         gameSession.users = gameSession.users.map(u => {
