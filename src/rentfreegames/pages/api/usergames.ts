@@ -21,12 +21,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         const gameData = await getGameData(payload.id.toString());
-        console.log(gameData);
         const user = await addGame(session.user.email, gameData);
-        console.log(user);
-
         const updatedSession = await updateUserGameSessions(user);
-        console.log(updatedSession);
     } else if (req.method === 'DELETE') {
         const payload = JSON.parse(req.body);
         if (!payload.id) {
@@ -35,9 +31,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         const user = await removeGame(session.user.email, payload.id.toString());
-        console.log(user);
         const updatedSession = await updateUserGameSessions(user);
-        console.log(updatedSession);
     }
 
     return res.json({

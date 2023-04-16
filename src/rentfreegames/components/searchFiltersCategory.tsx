@@ -10,7 +10,7 @@ export default function SearchFiltersCategory({
 }: {
     categories: Category[],
     category: Category,
-    setCategory: (category: Category) => void
+    setCategory:  (event: any, newValue: Category | null) => void
 }) {
     const categoryProps = {
         options: categories,
@@ -24,9 +24,7 @@ export default function SearchFiltersCategory({
                 disablePortal
                 id="category"
                 value={category}
-                onChange={(event: any, newValue: Category | null) => {
-                    setCategory(newValue);
-                }}
+                onChange={setCategory}
                 sx={{ width: "100%" }}
                 renderInput={(params) => <TextField {...params} label="Category" />}
             />

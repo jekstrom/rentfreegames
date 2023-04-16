@@ -209,7 +209,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const title = getSearchTitle(req, categories, mechanics);
 
         if ((owned as string).toLowerCase() === "true") {
-            const ownedGames = userData?.games?.map(g => {g.owned = true; return g;}) ?? [];
+            const ownedGames = userData?.games?.filter(g => {
+                return (cat ? g.categories.some(c => c.id === cat) : true)
+                && (mec ? g.mechanics.some(m => m.id === mec) : true)
+                && (players ? g.max_players >= parseInt(players as string) : true)
+                && (q ? g.name.toLowerCase().includes(q as string) : true);
+            }).map(g => {
+                g.owned = true; 
+                return g;
+            }) ?? [];
             console.log("Owned games: ", ownedGames.length);
             res.status(200).json({ games: ownedGames, categories, mechanics, totalPages, title });
             return;

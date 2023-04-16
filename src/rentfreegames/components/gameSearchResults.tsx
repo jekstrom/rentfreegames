@@ -11,6 +11,9 @@ import GroupIcon from '@mui/icons-material/Group';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BalanceIcon from '@mui/icons-material/Balance';
 import { useSession } from 'next-auth/react'
+import { search } from '../pages/games';
+import CircularProgress from '@mui/material/CircularProgress';
+import { useSWRConfig } from "swr"
 
 const Img = styled('img')({
     margin: 'auto',
@@ -27,7 +30,7 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-function FormRow({ row, onClick, numGames }: { row: Game, onClick: any, numGames: number }) {
+function FormRow({ row, numGames, handleToggle }: { row: Game, numGames: number, handleToggle: any }) {
     return (
         <React.Fragment>
             <Grid item xs={12} sm={12} md={numGames < 3 ? 12 : 4}>
@@ -50,8 +53,8 @@ function FormRow({ row, onClick, numGames }: { row: Game, onClick: any, numGames
                                 <Typography variant="subtitle1" component="div">
                                     {
                                         row.owned 
-                                            ? <StarIcon sx={{ color: 'secondary.light', p: 0, cursor: "pointer" }} onClick={onClick(row.id)} /> 
-                                            : <StarOutlineIcon sx={{ color: 'primary.main', p: 0, cursor: "pointer" }} onClick={onClick(row.id)}/>
+                                            ? <StarIcon sx={{ color: 'secondary.light', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} /> 
+                                            : <StarOutlineIcon sx={{ color: 'primary.main', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} />
                                     }
                                 </Typography>
                             </Grid>
@@ -102,38 +105,65 @@ const deleteData = async (url: string, data: any) => {
 }
 
 export default function GameSearchResults({
-    games,
-    title
+    title,
+    queryValue,
+    curPage,
+    playerCount,
+    category,
+    mechanic,
+    owned
 }: {
-    games: Game[],
-    title: string
+    title: string,
+    queryValue: string,
+    curPage: number,
+    playerCount: number,
+    category: string,
+    mechanic: string,
+    owned: boolean
 }) {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
-    const [allGames, starGame] = React.useState(games);
-    
+
+    const { data, error, isLoading, url } = search(queryValue, curPage, playerCount, category, mechanic, owned);
+    const { mutate } = useSWRConfig()
+
+    if (error) {
+        console.log("Failed to load");
+        return <div>Failed to load</div>
+    }
+    if (isLoading) {
+        console.log("Loading...");
+        return <CircularProgress />
+    }
+    if (!data) {
+        console.log("data: ", data);
+        return null;
+    }
+
     const handleToggle = (id: string) => async () => {
-        console.log(id);
-        const currentGames = [...allGames];
+        const currentGames = [...data.games];
         const selectedGame = currentGames.find(g => g.id === id);
 
-        if (!selectedGame.owned) {
+        if (!selectedGame?.owned) {
             selectedGame.owned = true;
             if (status === "authenticated") {
+                await mutate(url, {
+                    ...data,
+                    games: currentGames.map(g => g.id === id ? { ...g, owned: true } : { ...g})
+                }, { revalidate: false });
                 const response = await postData("/api/usergames", { userEmail, id });
-                console.log(response);
             }
         } else {
             selectedGame.owned = false;
             if (status === "authenticated") {
+                await mutate(url, {
+                    ...data,
+                    games: currentGames.map(g => g.id === id ? { ...g, owned: false } : { ...g})
+                }, { revalidate: false });
                 const response = await deleteData("/api/usergames", { userEmail, id });
-                console.log(response);
             }
         }
-
-        starGame(currentGames);
     };
-
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>
              <Typography variant="h4" component="div">
@@ -142,8 +172,8 @@ export default function GameSearchResults({
             <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                 <Grid container item spacing={3}>
                     {
-                        games.map((row) => (
-                            <FormRow row={row} onClick={handleToggle} numGames={games.length} />
+                        data.games.map((row) => (
+                            <FormRow row={row} numGames={data.games.length} handleToggle={handleToggle} key={row.id} />
                         ))
                     }
                 </Grid>

@@ -29,7 +29,7 @@ export async function getSortedGamesData(id?: string | string[]): Promise<Game[]
   const cache = await createCacheClient();
   try {
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const cacheKey = `gameslist:${today}:sorted`;
+    const cacheKey = `gamelist:${today}:sorted`;
 
 
     const cacheResponse = await cache.get(cacheKey);
@@ -40,7 +40,7 @@ export async function getSortedGamesData(id?: string | string[]): Promise<Game[]
 
     if (!games || games.length === 0) {
       console.log("Fetching from API...");
-      const response = await fetch(`${endpoint}?client_id=${client_id}&ids=${id}&order_by=rank`);
+      const response = await fetch(`${endpoint}?client_id=${client_id}&limit=30&ids=${id ?? ""}&order_by=rank`);
       const apiResponse = await response.json() as ApiResponse;
       games = apiResponse.games;
 
