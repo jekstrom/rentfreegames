@@ -1,16 +1,22 @@
+import { CircularProgress, Grid, SelectChangeEvent } from '@mui/material';
 import Button from '@mui/material/Button';
 import { useSession } from 'next-auth/react';
+import ErrorPage from 'next/error';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import useSWR from 'swr';
-import GamesList from '../../../components/gameList';
-import GameTable from '../../../components/gameTable';
+import GameSessionInviteResults from '../../../components/gameSessionInviteResults';
 import Layout from '../../../components/layout';
 import PlayerList from '../../../components/playersList';
-import { ResponseError, Session, Game, User, Owner } from '../../../interfaces';
+import Search from '../../../components/search';
+import SearchFiltersOwned from '../../../components/searchFiltersOwned';
+import SearchFiltersPlayers from '../../../components/searchFiltersPlayers';
+import { Category, Mechanic, ResponseError, Session, User } from '../../../interfaces';
 import utilStyles from '../../../styles/utils.module.css';
-import ErrorPage from 'next/error'
+import GameSessionResults from '../../../components/gameSessionResults';
+import SearchFiltersCategory from '../../../components/searchFiltersCategory';
+import SearchFiltersMechanic from '../../../components/searchFiltersMechanic';
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -25,45 +31,21 @@ const postData = async (url: string, data: any) => {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-function mergeGameOwners(games: Game[]): Game[] {
-    // Merge games' owners with same BGGId
-    for (const game of games.filter(g => g.owned)) {
-        const otherGame = games.find(g => g.BGGId === game.BGGId && g.ownedBy.every(o => game.ownedBy.indexOf(o) < 0));
-        if (otherGame) {
-            game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
-            otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
-            otherGame.owned = true;
-        }
+export const getInviteSession = (inviteId: string) => {
+    const url = (inviteId ? `/api/sessions/invite/${inviteId}` : null);
+
+    const { data, error, isLoading, isValidating } = useSWR<
+        { gameSession: Session, user: User, categories: Category[], mechanics: Mechanic[] },
+        ResponseError
+    >(() => url, fetcher)
+
+    return {
+        data,
+        isLoading,
+        error,
+        isValidating,
+        url
     }
-    return games;
-}
-
-function getUniqueGames(games: Game[]){ 
-    // Unique games by BGGId
-    let uniqueGames = Object.values(
-        games.reduce((acc, obj) => ({ ...acc, [obj.BGGId]: obj }), {})
-    ) as Game[];
-
-    // Remove duplicate owners
-    for (const game of uniqueGames) {
-        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.email]: obj }), {})) as [Owner];
-    }
-    return uniqueGames;
-}
-
-function getUserGames(users: User[], email: string): Game[] {
-    let games: Game[] = [];
-    users.forEach(user => {
-        user.games.forEach(game => {
-            game.owned = user.email === email;
-            game.ownedBy = [{name: user.name, email: user.email}];
-            games.push(game);
-        });
-    });
-
-    games = mergeGameOwners(games);
-
-    return getUniqueGames(games);
 }
 
 export default function SessionDetails() {
@@ -72,18 +54,22 @@ export default function SessionDetails() {
     const router = useRouter();
 
     const { query } = useRouter()
-    const { data, error, isLoading, isValidating } = useSWR<
-        {gameSession: Session, user: User},
-        ResponseError
-    >(() => (query.inviteId ? `/api/sessions/invite/${query.inviteId}` : null), fetcher)
-    
+
+    const [category, changeCategory] = React.useState(undefined);
+    const [mechanic, changeMechanic] = React.useState(undefined);
+    const [playerCount, setPlayers] = React.useState(2);
+    const [queryValue, setQueryValue] = React.useState('')
+    const [owned, setOwned] = React.useState(false)
+
+    const { data, error, isLoading, isValidating } = getInviteSession(query?.inviteId as string)
+
     if (error) {
-        console.log("Failed to load: ", error);
-        return <div>Failed to load</div>
+        console.log("Failed to load session");
+        return <Layout><div>Failed to load</div></Layout>
     }
     if (isLoading) {
         console.log("Loading...");
-        return <div>Loading...</div>
+        return <Layout><div style={{ display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
     }
     if (!data) {
         console.log("data: ", data);
@@ -101,6 +87,23 @@ export default function SessionDetails() {
 
     const leaveSession = () => {
         console.log("Leaving session");
+    };
+
+    const onQueryChange = (event) => {
+        setQueryValue(event.target.value);
+    };
+
+    const handleChangePlayers = (event: SelectChangeEvent<number>, child: ReactNode) => {
+        setPlayers(event.target.value as number);
+    };
+
+    const onChangeCategory = (event: any, newValue: Category | null) => {
+        console.log("onChangeCategory", newValue);
+        changeCategory(newValue);
+    };
+
+    const onOwnedChange = (event) => {
+        setOwned(event.target.checked);
     };
 
     return (
@@ -123,16 +126,32 @@ export default function SessionDetails() {
                         : <></>
                 }
             </section>
+            <section>
+                <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+                    <Grid item xs={12} sm={12} md={12}>
+                        <Search queryValue={queryValue} setQueryValue={onQueryChange} />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={3}>
+                        <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={3}>
+                        <SearchFiltersMechanic mechanics={data.mechanics} mechanic={mechanic} setMechanic={changeMechanic} />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
+                        <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} />
+                    </Grid>
+                </Grid>
+            </section>
             {
-                data?.gameSession.users 
+                data?.gameSession.users
                     ? (
-                    <section>
-                        <PlayerList players={data.gameSession.users} userEmail={userEmail} host={data.gameSession.createdBy} />
+                        <section>
+                            <PlayerList players={data.gameSession.users} userEmail={userEmail} host={data.gameSession.createdBy} />
 
-                        <GameTable games={getUserGames(data.gameSession.users, userEmail)} title={"Session Games"} />
+                            <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
 
-                        <GameTable games={getUserGames([data.user], userEmail)} title={"Your Games"} />
-                    </section>) 
+                            <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} title={"Your Games"} />
+                        </section>)
                     : <></>
             }
         </Layout>

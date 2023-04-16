@@ -6,6 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import * as React from 'react';
 import { User } from '../interfaces';
 import utilStyles from '../styles/utils.module.css';
+import { theme } from '../styles/theme';
 
 function stringToColor(string: string) {
     let hash = 0;
@@ -54,20 +55,24 @@ export default function PlayerList({
                 sx={{ maxWidth: '20rem', bgcolor: 'background.paper' }}
                 aria-label="players"
             >
-                {players?.map(({ email, name }) => (
-                    <ListItem disablePadding key={email}>
-                        <ListItem disableGutters role={undefined} sx={{ padding: '0' }}>
+                {/* background: 'linear-gradient(to right bottom, #430089, #82ffa1)'}} */}
+                {players?.map(({ image, email, name }) => (
+                        <ListItem disableGutters key={email} role={undefined} sx={{ padding: '0' }}>
                             <ListItemText
                                 sx={
-                                    email === userEmail
-                                        ? { bgcolor: 'primary.main', color: 'primary.contrastText', p: 2 }
+                                    host.email === email
+                                        ? { background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`, color: 'primary.contrastText', p: 2 }
                                         : { bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }
                                 }
                                 primary={
                                     <React.Fragment>
                                         <Grid container spacing={1}>
                                             <Grid item>
-                                                <Avatar {...stringAvatar(name ?? email)} />
+                                                {
+                                                    image && image.length > 0
+                                                        ? <Avatar src={image} />
+                                                        : <Avatar {...stringAvatar(name ?? email)} />
+                                                }
                                             </Grid>
                                             <Grid item style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                                                 {name ?? email}
@@ -78,7 +83,6 @@ export default function PlayerList({
                                 secondary={host.email === email ? 'Host' : ''}
                             />
                         </ListItem>
-                    </ListItem>
                 ))}
             </List>
         </div>

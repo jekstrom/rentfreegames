@@ -9,7 +9,7 @@ export default function SearchFiltersPlayers({
     player,
     setPlayers
 }: {
-    player: number,
+    player?: number,
     setPlayers: (event: SelectChangeEvent<number>, child: ReactNode) => void
 }) {
     return (
@@ -23,6 +23,7 @@ export default function SearchFiltersPlayers({
                     label="Players"
                     onChange={setPlayers}
                 >
+                    <MenuItem value={undefined}>Any</MenuItem>
                     <MenuItem value={2}>2</MenuItem>
                     <MenuItem value={3}>3</MenuItem>
                     <MenuItem value={4}>4</MenuItem>

@@ -92,6 +92,11 @@ export async function getSessionData(id?: string, email?: string): Promise<Sessi
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
+  if (id && id.startsWith("inv--")) {
+    const session = await getSessionDataByInviteId(id, email);
+    return [session];
+  }
+
   if (id) {
     const { resources } = await container.items
       .query({

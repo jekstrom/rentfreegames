@@ -11,7 +11,7 @@ export default function SearchFiltersCategory({
 }) {
     return (
         <Box sx={{ padding: 1 }}>
-            <FormControlLabel sx={{ width: "100%" }} control={<Checkbox checked={owned} onChange={setOwned} color="primary" />} label="Owned" />
+            <FormControlLabel sx={{ width: "100%" }} control={<Checkbox checked={owned} onChange={setOwned} color="primary" />} label="My games" />
         </Box>
     )
 }

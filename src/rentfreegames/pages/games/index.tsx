@@ -1,4 +1,4 @@
-import { Grid, SelectChangeEvent, Typography } from '@mui/material'
+import { Button, Grid, SelectChangeEvent, Typography } from '@mui/material'
 import Pagination from '@mui/material/Pagination'
 import Stack from '@mui/material/Stack'
 import Head from 'next/head'
@@ -13,8 +13,9 @@ import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import { Category, Game, Mechanic } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
-import { useSession } from 'next-auth/react'
 import CircularProgress from '@mui/material/CircularProgress';
+import { useRouter } from 'next/router'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -49,6 +50,8 @@ export default function Games({
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
 
+    const { query } = useRouter()
+
     const { data, error, isLoading } = search(queryValue, curPage, playerCount, category, mechanic, owned);
     if (error) {
         console.log("Failed to load");
@@ -56,7 +59,7 @@ export default function Games({
     }
     if (isLoading) {
         console.log("Loading...");
-        return <Layout><CircularProgress /></Layout>
+        return <Layout><div style={{display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
     }
     if (!data) {
         console.log("data: ", data);
@@ -92,9 +95,16 @@ export default function Games({
             <section className={utilStyles.headingMd}>
                 <p>{data?.title ?? ""}</p>
                 <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
-                    <Grid item xs={12} sm={12} md={12}>
+                    <Grid item xs={12} sm={12} md={query && query.inviteId ? 8 : 12}>
                         <Search queryValue={queryValue} setQueryValue={onQueryChange} />
                     </Grid>
+                    {
+                        query && query.inviteId 
+                        ? <Grid item xs={12} sm={12} md={4} style={{ padding: 20, display: "flex", justifyContent: "flex-end" }}>
+                            <Button variant="contained" color="primary" href={`/sessions/invite/${query.inviteId}`}><ArrowBackIcon sx={{ color: "secondary.light", fontSize: 20 }} /> Back to invite</Button>
+                        </Grid>
+                        : <></>
+                    }
                     <Grid item xs={12} sm={12} md={3}>
                         <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
                     </Grid>
