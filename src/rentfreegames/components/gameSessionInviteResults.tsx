@@ -45,7 +45,7 @@ function FormRow({ row }: { row: Game }) {
                                     <Tooltip title={row.ownedBy.map(o => o.name).join(", ")}>
                                         <PersonIcon sx={{ fontSize: 14 }} />
                                     </Tooltip>
-                                    {row.ownedBy.length > 1 ? `${row.ownedBy.length} players` : row.ownedBy.map(o => o.name).join(", ")}
+                                    {row.ownedBy.length > 1 ? `${row.ownedBy.length} owners` : row.ownedBy.map(o => o.name).join(", ")}
                                 </Typography>
                             </Grid>
                             <Grid item sx={{ textAlign: "right" }}>

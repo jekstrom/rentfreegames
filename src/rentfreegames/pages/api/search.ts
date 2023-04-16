@@ -9,6 +9,8 @@ import { getCategories, getMechanics, getSearchTitle, buildSearchQuery, ApiRespo
 function cleanUser(user: User) {
     (user as any).email = null;
     (user as any).sub = null;
+    delete user.sub;
+    delete (user as any).email;
     return user;
 }
 

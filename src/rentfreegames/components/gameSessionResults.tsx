@@ -59,7 +59,7 @@ function FormRow({ row }: { row: Game }) {
                                     <Tooltip title={row.ownedBy.map(o => o.name).join(", ")}>
                                         <PersonIcon sx={{ fontSize: 14 }} />
                                     </Tooltip>
-                                    {row.ownedBy.length > 1 ? `${row.ownedBy.length} players` : row.ownedBy.map(o => o.name).join(", ")}
+                                    {row.ownedBy.length > 1 ? `${row.ownedBy.length} owners` : row.ownedBy.map(o => o.name).join(", ")}
                                 </Typography>
                             </Grid>
                             <Grid item sx={{ textAlign: "right" }}>
@@ -196,7 +196,7 @@ export default function GameSessionResults({
             <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                 <Grid container item spacing={3}>
                     {
-                        getUserGames(data.gameSession.users, userEmail, query, playerCount, mechanic, category, owned).map((row) => (
+                        getUserGames(data.gameSession.users, data.sessionUser.id, query, playerCount, mechanic, category, owned).map((row) => (
                             <FormRow row={row} key={row.id} />
                         ))
                     }
