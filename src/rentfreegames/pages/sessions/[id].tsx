@@ -15,13 +15,13 @@ import utilStyles from '../../styles/utils.module.css'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 function getGamesByPlayerCount(games: Game[], numPlayers: number): Game[] {
-    return games.filter(g => parseInt(g.MinPlayers) <= numPlayers && parseInt(g.MaxPlayers) >= numPlayers);
+    return games.filter(g => g.min_players <= numPlayers && g.max_players >= numPlayers);
 }
 
 function mergeGameOwners(games: Game[]): Game[] {
     // Merge games' owners with same BGGId
     for (const game of games.filter(g => g.owned)) {
-        const otherGame = games.find(g => g.BGGId === game.BGGId && g.ownedBy.every(o => game.ownedBy.indexOf(o) < 0));
+        const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.indexOf(o) < 0));
         if (otherGame) {
             game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
             otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
@@ -34,7 +34,7 @@ function mergeGameOwners(games: Game[]): Game[] {
 function getUniqueGames(games: Game[]){ 
     // Unique games by BGGId
     let uniqueGames = Object.values(
-        games.reduce((acc, obj) => ({ ...acc, [obj.BGGId]: obj }), {})
+        games.reduce((acc, obj) => ({ ...acc, [obj.id]: obj }), {})
     ) as Game[];
 
     // Remove duplicate owners

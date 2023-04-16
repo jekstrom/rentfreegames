@@ -133,7 +133,7 @@ export async function addGame(email: string, game: Game): Promise<User> {
         if (!user.games) {
             user.games = [];
         }
-        if (!user.games.some((g) => g.BGGId === game.BGGId)) {
+        if (!user.games.some((g) => g.id === game.id)) {
             user.games.push(game);
         }
 
@@ -162,7 +162,7 @@ export async function addGame(email: string, game: Game): Promise<User> {
     }
 }
 
-export async function removeGame(email: string, bggId: string): Promise<User> {
+export async function removeGame(email: string, id: string): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
 
@@ -179,8 +179,8 @@ export async function removeGame(email: string, bggId: string): Promise<User> {
         if (!user.games) {
             user.games = [];
         }
-        if (user.games.some((g) => g.BGGId === bggId)) {
-            user.games = user.games.filter((g) => g.BGGId !== bggId);
+        if (user.games.some((g) => g.id === id)) {
+            user.games = user.games.filter((g) => g.id !== id);
         }
 
         const result = await container.items.upsert(

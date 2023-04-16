@@ -15,12 +15,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (req.method === 'POST') {
         const payload = JSON.parse(req.body);
-        if (!payload.bggId) {
-            res.status(400).json({ message: "Missing bggId." });
+        if (!payload.id) {
+            res.status(400).json({ message: "Missing id." });
             return;
         }
 
-        const gameData = await getGameData(payload.bggId.toString());
+        const gameData = await getGameData(payload.id.toString());
         console.log(gameData);
         const user = await addGame(session.user.email, gameData);
         console.log(user);
@@ -29,12 +29,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         console.log(updatedSession);
     } else if (req.method === 'DELETE') {
         const payload = JSON.parse(req.body);
-        if (!payload.bggId) {
-            res.status(400).json({ message: "Missing bggId." });
+        if (!payload.id) {
+            res.status(400).json({ message: "Missing id." });
             return;
         }
 
-        const user = await removeGame(session.user.email, payload.bggId.toString());
+        const user = await removeGame(session.user.email, payload.id.toString());
         console.log(user);
         const updatedSession = await updateUserGameSessions(user);
         console.log(updatedSession);

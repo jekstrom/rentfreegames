@@ -111,3 +111,11 @@ publish public games session
 expire game sessions
 
 add a heart for a wishlist collection (inc. amazon affiliate links)
+
+import collection from bgg
+
+hide emails from client
+
+passwordless logins/guest users
+
+profile page

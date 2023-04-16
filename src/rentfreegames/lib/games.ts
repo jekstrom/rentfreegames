@@ -1,93 +1,92 @@
-import { CosmosClient } from '@azure/cosmos'
 import { Game } from '../interfaces';
+import * as redis from 'redis'
 
-const endpoint = process.env.DB_ENDPOINT;
-const key = process.env.DB_KEY;
-const client = new CosmosClient({ endpoint, key });
+const endpoint = "https://api.boardgameatlas.com/api/search"
+const client_id = process.env.BOARDGAME_ATLAS_CLIENT_ID
 
-const DATABASE = { id: "Games Database" };
-const CONTAINER = { id: "Games" };
+interface ApiResponse {
+  games: Game[];
+}
+
+const createCacheClient = async () => {
+  try {
+    const cache = redis.createClient({
+        url: `rediss://${process.env.REDIS_URL}:6380`,
+        password: process.env.REDIS_PASSWORD
+    });
+    await cache.connect();
+    cache.on("error", function(error) {
+      console.error(error);
+   });
+    return cache;
+} catch (error) {
+    console.log(error);
+}
+}
 
 export async function getSortedGamesData(id?: string | string[]): Promise<Game[]> {
-  const { database } = await client.databases.createIfNotExists(DATABASE);
-  const { container } = await database.containers.createIfNotExists(CONTAINER);
+  let games = [] as Game[];
+  const cache = await createCacheClient();
+  try {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const cacheKey = `gameslist:${today}:sorted`;
 
-  if (id) {
-    const { resources } = await container.items
-    .query({
-      query: "SELECT * from g WHERE g.BGGId = @id",
-      parameters: [{ name: "@id", value: id }]
-    })
-    .fetchAll();
 
-  return resources.map(r => r as Game).sort(g => parseFloat(g.Rank));
-  } else {
-    const { resources } = await container.items
-    .query({
-      query: "SELECT * FROM g",
-    })
-    .fetchAll();
+    const cacheResponse = await cache.get(cacheKey);
+    
+    if (cacheResponse) {
+      games = JSON.parse(cacheResponse) as Game[];
+    }
 
-  return resources.map(r => r as Game).sort(g => parseFloat(g.Rank));
+    if (!games || games.length === 0) {
+      console.log("Fetching from API...");
+      const response = await fetch(`${endpoint}?client_id=${client_id}&ids=${id}&order_by=rank`);
+      const apiResponse = await response.json() as ApiResponse;
+      games = apiResponse.games;
+
+      // Cache games list for 1 day
+      await cache.set(cacheKey, JSON.stringify(games), { EX: 86400 });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await cache.disconnect();
   }
+  return games;
 }
 
 export async function getGamesData(id: string | string[]): Promise<Game[]> {
-  const { database } = await client.databases.createIfNotExists(DATABASE);
-  const { container } = await database.containers.createIfNotExists(CONTAINER);
+  let games = [] as Game[];
+  const cache = await createCacheClient();
+  try {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const cacheKey = `gameslist:${today}:${id}`;
 
-  if (id) {
-    const { resources } = await container.items
-      .query({
-        query: "SELECT * from g WHERE g.BGGId = @id",
-        parameters: [{ name: "@id", value: id }]
-      })
-      .fetchAll();
-  
-    return resources.map(r => r as Game);
-  } else {
-    const { resources } = await container.items
-      .query({
-        query: "SELECT * FROM g",
-      })
-      .fetchAll();
-  
-    return resources.map(r => r as Game);
-  }
-}
 
-export async function getAllGameIds() {
-  const records = await getSortedGamesData();
-  return records.map(r => {
-    return {
-      params: {
-        BGGId: r.BGGId
-      }
+    const cacheResponse = await cache.get(cacheKey);
+    
+    if (cacheResponse) {
+      games = JSON.parse(cacheResponse) as Game[];
     }
-  })
-}
 
+    if (!games || games.length === 0) {
+      console.log("Fetching from API...");
+      const response = await fetch(`${endpoint}?client_id=${client_id}&ids=${id}`);
+      const apiResponse = await response.json() as ApiResponse;
+      games = apiResponse.games;
+
+      // Cache games list for 1 day
+      await cache.set(cacheKey, JSON.stringify(games), { EX: 86400 });
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await cache.disconnect();
+  }
+  return games;
+}
 
 export async function getGameData(id?: string): Promise<Game> {
-  const gameData = id === undefined ? [] : await getGamesData(id)
-
-  return gameData[0]
-}
-
-export async function searchGames(query: string): Promise<Game[]> {
-  const { database } = await client.databases.createIfNotExists(DATABASE);
-  const { container } = await database.containers.createIfNotExists(CONTAINER);
-
-  console.log("Searching for " + query);
-
-  const { resources } = await container.items
-    .query({
-      query: "SELECT * from g WHERE LOWER(g.Name) LIKE @query",
-      parameters: [{ name: "@query", value: `%${query.toLocaleLowerCase()}%` }]
-    })
-    .fetchAll();
-
-    console.log("Found games: " + resources.length);
-
-  return resources.map(r => r as Game);
+  let games = await getGamesData(id);
+  return games.length > 0 ? games[0] : null;
 }
