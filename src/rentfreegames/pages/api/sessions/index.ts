@@ -20,9 +20,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         const userData = await getUserData(userSession.user.email);
+        (userData as any).email = null;
 
         const newSession = await postSessionData(payload.title, userData);
-        console.log(newSession);
 
         return res.json(newSession);
     } else if (req.method === 'GET') {
@@ -31,7 +31,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             payload = JSON.parse(req.body);
         }
 
-        let gameSessions = await getSessionData(payload?.id?.toString(), userSession.user.email);
+        let gameSessions = await getSessionData(payload?.id?.toString());
 
         return res.json(gameSessions);
     }

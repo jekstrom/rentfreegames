@@ -8,26 +8,6 @@ const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
 const client = new CosmosClient({ endpoint, key });
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
-    console.log("USER ENDPOINT")
-    const results = {}
-    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
-    console.log(database.id);
-    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
-    console.log(container.id);
-
-    const { resources } = await container.items
-        .query({
-            query: "SELECT * from c WHERE c.isCapitol = @isCapitol",
-            parameters: [{ name: "@isCapitol", value: true }]
-        })
-        .fetchAll();
-
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'application/json')
-    res.end(JSON.stringify({ results }))
-}
-
 export async function getUserData(email: string): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
@@ -49,7 +29,7 @@ export async function postUserData(profile: Profile): Promise<User> {
     try {
         const result = await container.items.create(
             {
-                id: profile.email,
+                id: crypto.randomUUID(),
                 email: profile.email,
                 image: profile.image,
                 name: profile.name,
@@ -67,7 +47,6 @@ export async function postUserData(profile: Profile): Promise<User> {
 
         return {
             id: result.resource.id,
-            email: result.resource.email,
             image: result.resource.image,
             name: result.resource.name,
             sub: result.resource.sub,
@@ -86,7 +65,7 @@ export async function postJWTUserData(profile: JWT): Promise<User> {
     try {
         const result = await container.items.create(
             {
-                id: profile.email,
+                id: crypto.randomUUID(),
                 email: profile.email,
                 image: profile.picture,
                 name: profile.name,
@@ -104,7 +83,6 @@ export async function postJWTUserData(profile: JWT): Promise<User> {
 
         return {
             id: result.resource.id,
-            email: result.resource.email,
             image: result.resource.image,
             name: result.resource.name,
             sub: result.resource.sub,
@@ -116,18 +94,18 @@ export async function postJWTUserData(profile: JWT): Promise<User> {
     }
 }
 
-export async function addGame(email: string, game: Game): Promise<User> {
+export async function addGame(id: string, game: Game): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
 
     const { resources } = await container.items
         .query({
-            query: "SELECT * from u WHERE u.email = @email",
-            parameters: [{ name: "@email", value: email }]
+            query: "SELECT * from u WHERE u.id = @id",
+            parameters: [{ name: "@id", value: id }]
         })
         .fetchAll();
 
-    const user = resources.find((u) => u.email === email) as User;
+    const user = resources.find((u) => u.id === id) as User;
 
     try {
         if (!user.games) {
@@ -139,8 +117,8 @@ export async function addGame(email: string, game: Game): Promise<User> {
 
         const result = await container.items.upsert(
             {
-                id: user.email,
-                email: user.email,
+                id: user.id,
+                email: resources[0].email,
                 image: user.image,
                 name: user.name,
                 sub: user.sub,
@@ -162,31 +140,31 @@ export async function addGame(email: string, game: Game): Promise<User> {
     }
 }
 
-export async function removeGame(email: string, id: string): Promise<User> {
+export async function removeGame(id: string, gameId: string): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
 
     const { resources } = await container.items
         .query({
-            query: "SELECT * from u WHERE u.email = @email",
-            parameters: [{ name: "@email", value: email }]
+            query: "SELECT * from u WHERE u.id = @id",
+            parameters: [{ name: "@id", value: id }]
         })
         .fetchAll();
 
-    const user = resources.find((u) => u.email === email) as User;
+    const user = resources.find((u) => u.id === id) as User;
 
     try {
         if (!user.games) {
             user.games = [];
         }
-        if (user.games.some((g) => g.id === id)) {
-            user.games = user.games.filter((g) => g.id !== id);
+        if (user.games.some((g) => g.id === gameId)) {
+            user.games = user.games.filter((g) => g.id !== gameId);
         }
 
         const result = await container.items.upsert(
             {
-                id: user.email,
-                email: user.email,
+                id: user.id,
+                email: resources[0].email,
                 image: user.image,
                 name: user.name,
                 sub: user.sub,

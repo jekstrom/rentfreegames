@@ -14,6 +14,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   try {
+    (user as any).email = null;
     const result = await container.items.create(
       {
         id: crypto.randomUUID(),
@@ -56,6 +57,7 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
       return null;
     }
     const existingSession = existingSessions[0];
+    (user as any).email = null;
 
     const result = await container.items.upsert(
       {
@@ -88,12 +90,12 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
   }
 }
 
-export async function getSessionData(id?: string, email?: string): Promise<Session[]> {
+export async function getSessionData(id?: string): Promise<Session[]> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   if (id && id.startsWith("inv--")) {
-    const session = await getSessionDataByInviteId(id, email);
+    const session = await getSessionDataByInviteId(id);
     return [session];
   }
 
@@ -130,26 +132,23 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   if (user) {
-    console.log("Updating user:", user.email);
-
+    (user as any).email = null;
     const { resources } = await container.items
       .query({
         query: "SELECT c FROM c \
         JOIN users in c.users \
-        WHERE users.email = @email",
-        parameters: [{ name: "@email", value: user.email }]
+        WHERE users.id = @id",
+        parameters: [{ name: "@id", value: user.id }]
       })
       .fetchAll();
 
     if (resources && resources.length > 0) {
-      console.log("resources:", JSON.stringify(resources));
-
       let gameSessions = [] as Session[];
       gameSessions = resources.map(r => r.c as Session);
 
       for (const gameSession of gameSessions) {
         gameSession.users = gameSession.users.map(u => {
-          if (u.email === user.email) {
+          if (u.id === user.id) {
             u.games = user.games;
           }
           return u;
@@ -177,7 +176,7 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
   return [];
 }
 
-export async function getSessionDataByInviteId(inviteId: string, email?: string): Promise<Session> {
+export async function getSessionDataByInviteId(inviteId: string): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 

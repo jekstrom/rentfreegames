@@ -3,7 +3,7 @@ export type ResponseError = {
 }
 
 export interface Owner {
-    email: string,
+    userId: string,
     name?: string
 }
 
@@ -173,7 +173,6 @@ export interface Game {
 
 export interface User {
     id: string,
-    email: string,
     image: string,
     name: string,
     sub: string

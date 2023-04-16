@@ -87,8 +87,8 @@ function getGamesByPlayerCount(games: Game[], numPlayers: number): Game[] {
 
 function mergeGameOwners(games: Game[]): Game[] {
     // Merge games' owners with same BGGId
-    for (const game of games.filter(g => g.owned)) {
-        const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.indexOf(o) < 0));
+    for (const game of games) {
+        const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.every(ob => ob.userId !== o.userId)));
         if (otherGame) {
             game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
             otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
@@ -106,18 +106,18 @@ function getUniqueGames(games: Game[]) {
 
     // Remove duplicate owners
     for (const game of uniqueGames) {
-        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.email]: obj }), {})) as [Owner];
+        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.userId]: obj }), {})) as [Owner];
     }
     return uniqueGames;
 }
 
-function getUserGames(users: User[], email: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean): Game[] {
+function getUserGames(users: User[], userId: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     users.forEach(user => {
         user.games.forEach(game => {
-            game.owned = user.email === email;
-            game.ownedBy = [{ name: user.name, email: user.email }];
+            game.owned = user.id === userId;
+            game.ownedBy = [{ name: user.name, userId: user.id }];
             games.push(game);
         });
     });
@@ -131,7 +131,7 @@ function getUserGames(users: User[], email: string, query: string, playerCount?:
     if (playerCount && playerCount > 1) {
         games = games.filter(g => g.max_players >= playerCount);
     } else {
-        games = getGamesByPlayerCount(games, users.length)
+        //games = getGamesByPlayerCount(games, users.length)
     }
 
     if (mechanic) {

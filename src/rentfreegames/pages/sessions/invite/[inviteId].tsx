@@ -1,6 +1,5 @@
-import { CircularProgress, Grid, SelectChangeEvent } from '@mui/material';
+import { Grid, SelectChangeEvent } from '@mui/material';
 import Button from '@mui/material/Button';
-import { useSession } from 'next-auth/react';
 import ErrorPage from 'next/error';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -10,13 +9,13 @@ import GameSessionInviteResults from '../../../components/gameSessionInviteResul
 import Layout from '../../../components/layout';
 import PlayerList from '../../../components/playersList';
 import Search from '../../../components/search';
-import SearchFiltersOwned from '../../../components/searchFiltersOwned';
 import SearchFiltersPlayers from '../../../components/searchFiltersPlayers';
 import { Category, Mechanic, ResponseError, Session, User } from '../../../interfaces';
 import utilStyles from '../../../styles/utils.module.css';
 import GameSessionResults from '../../../components/gameSessionResults';
 import SearchFiltersCategory from '../../../components/searchFiltersCategory';
 import SearchFiltersMechanic from '../../../components/searchFiltersMechanic';
+import { useSession } from 'next-auth/react';
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -50,7 +49,6 @@ export const getInviteSession = (inviteId: string) => {
 
 export default function SessionDetails() {
     const { data: session, status } = useSession();
-    const userEmail = session?.user.email;
     const router = useRouter();
 
     const { query } = useRouter()
@@ -120,7 +118,7 @@ export default function SessionDetails() {
             <section>
                 {
                     data?.gameSession.users ?
-                        data?.gameSession.users?.some(u => u.email === userEmail)
+                        data?.gameSession.users?.some(u => u.id === data.user.id)
                             ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
                             : <Button variant="contained" sx={{ width: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }} onClick={joinSession}>Join session</Button>
                         : <></>
@@ -146,7 +144,7 @@ export default function SessionDetails() {
                 data?.gameSession.users
                     ? (
                         <section>
-                            <PlayerList players={data.gameSession.users} userEmail={userEmail} host={data.gameSession.createdBy} />
+                            <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
 
                             <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
 

@@ -14,7 +14,7 @@ import SearchFiltersCategory from '../../components/searchFiltersCategory'
 import SearchFiltersMechanic from '../../components/searchFiltersMechanic'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
-import { Category, Mechanic, ResponseError, Session } from '../../interfaces'
+import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -23,7 +23,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 export function getSession(id: string) {
     const url = (id ? `/api/sessions/${id}` : null)
     const { data, error, isLoading, isValidating } = useSWR<
-        { gameSession: Session, categories: Category[], mechanics: Mechanic[] },
+        { gameSession: Session, sessionUser: User, categories: Category[], mechanics: Mechanic[] },
         ResponseError
     >(() => url, fetcher)
 
@@ -37,9 +37,6 @@ export function getSession(id: string) {
 }
 
 export default function SessionDetails() {
-    const { data: session, status } = useSession();
-    const userEmail = session?.user.email;
-
     const [category, changeCategory] = React.useState(undefined);
     const [mechanic, changeMechanic] = React.useState(undefined);
     const [playerCount, setPlayers] = React.useState(undefined);
@@ -93,7 +90,7 @@ export default function SessionDetails() {
             </article>
 
             {
-                data.gameSession.createdBy.email === userEmail
+                data.gameSession.createdBy.id === data.sessionUser.id
                     ? <section className={utilStyles.headingMd}>
                         <Typography align="justify" gutterBottom>
                             Share this invite code with your friends to invite them to this session
@@ -136,7 +133,7 @@ export default function SessionDetails() {
                 </Grid>
             </section>
 
-            <PlayerList players={data.gameSession.users} userEmail={userEmail} host={data.gameSession.createdBy} />
+            <PlayerList players={data.gameSession.users} user={data.sessionUser} host={data.gameSession.createdBy} />
 
             <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Games"} />
         </Layout>

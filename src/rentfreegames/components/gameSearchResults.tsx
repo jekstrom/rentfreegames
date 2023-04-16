@@ -152,7 +152,7 @@ export default function GameSearchResults({
                     ...data,
                     games: currentGames.map(g => g.id === id ? { ...g, owned: true } : { ...g})
                 }, { revalidate: false });
-                const response = await postData("/api/usergames", { userEmail, id });
+                const response = await postData("/api/usergames", { id });
             }
         } else {
             selectedGame.owned = false;
@@ -161,7 +161,7 @@ export default function GameSearchResults({
                     ...data,
                     games: currentGames.map(g => g.id === id ? { ...g, owned: false } : { ...g})
                 }, { revalidate: false });
-                const response = await deleteData("/api/usergames", { userEmail, id });
+                const response = await deleteData("/api/usergames", { id });
             }
         }
     };

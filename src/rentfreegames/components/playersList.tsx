@@ -39,11 +39,11 @@ function stringAvatar(name: string) {
 
 export default function PlayerList({
     players,
-    userEmail,
+    user,
     host
 }: {
     players: User[],
-    userEmail: string,
+    user: User,
     host: User
 }) {
     return (
@@ -56,11 +56,11 @@ export default function PlayerList({
                 aria-label="players"
             >
                 {/* background: 'linear-gradient(to right bottom, #430089, #82ffa1)'}} */}
-                {players?.map(({ image, email, name }) => (
-                        <ListItem disableGutters key={email} role={undefined} sx={{ padding: '0' }}>
+                {players?.map(({ image, id, name }) => (
+                        <ListItem disableGutters key={id} role={undefined} sx={{ padding: '0' }}>
                             <ListItemText
                                 sx={
-                                    host.email === email
+                                    host.id === id
                                         ? { background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`, color: 'primary.contrastText', p: 2 }
                                         : { bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }
                                 }
@@ -71,16 +71,16 @@ export default function PlayerList({
                                                 {
                                                     image && image.length > 0
                                                         ? <Avatar src={image} />
-                                                        : <Avatar {...stringAvatar(name ?? email)} />
+                                                        : <Avatar {...stringAvatar(name ?? id)} />
                                                 }
                                             </Grid>
                                             <Grid item style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                                {name ?? email}
+                                                {name ?? id}
                                             </Grid>
                                         </Grid>
                                     </React.Fragment>
                                 }
-                                secondary={host.email === email ? 'Host' : ''}
+                                secondary={host.id === id ? 'Host' : ''}
                             />
                         </ListItem>
                 ))}

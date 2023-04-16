@@ -18,9 +18,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { query } = req
     const { inviteId } = query
 
-    console.log("Getting session data for invite id: " + inviteId);
-
-    let gameSession = await getSessionDataByInviteId(inviteId as string, userSession.user.email);
+    let gameSession = await getSessionDataByInviteId(inviteId as string);
 
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const categories = await getCategories(today);

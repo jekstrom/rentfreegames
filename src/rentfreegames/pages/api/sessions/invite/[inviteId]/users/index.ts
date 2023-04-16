@@ -24,9 +24,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         const userData = await getUserData(userSession.user.email);
+        (userData as any).email = null;
 
         const updatedSession = await addSessionUser(payload.sessionId, userData, payload.inviteId);
-        console.log(updatedSession);
 
         return res.json(updatedSession);
     } 

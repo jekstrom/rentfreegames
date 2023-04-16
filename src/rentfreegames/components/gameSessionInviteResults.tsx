@@ -92,17 +92,17 @@ function getUniqueGames(games: Game[]) {
 
     // Remove duplicate owners
     for (const game of uniqueGames) {
-        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.email]: obj }), {})) as [Owner];
+        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.userId]: obj }), {})) as [Owner];
     }
     return uniqueGames;
 }
 
-function getUserGames(user: User, email: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean): Game[] {
+function getUserGames(user: User, userId: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     user.games.forEach(game => {
-        game.owned = user.email === email;
-        game.ownedBy = [{ name: user.name, email: user.email }];
+        game.owned = user.id === userId;
+        game.ownedBy = [{ name: user.name, userId: user.id }];
         games.push(game);
     });
 
@@ -149,9 +149,7 @@ export default function GameSessionInviteResults({
     category?: Category,
     owned?: boolean
 }) {
-    const { data: session, status } = useSession();
     const router = useRouter();
-    const userEmail = session?.user.email;
 
     const { data, error, isLoading, isValidating, url } = getInviteSession(id);
     const { mutate } = useSWRConfig()
@@ -173,7 +171,7 @@ export default function GameSessionInviteResults({
         router.push(`/games?inviteId=${id}`)
     }
 
-    const games = getUserGames(data.user, userEmail, query, playerCount, mechanic, category, owned);
+    const games = getUserGames(data.user, data.user.id, query, playerCount, mechanic, category, owned);
 
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>
