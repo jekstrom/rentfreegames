@@ -42,7 +42,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const pageLength = 30;
+    const pageLength = 45;
     let cacheKey = `gamelist:${today}`;
     let totalPages = 1;
 
@@ -67,7 +67,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             const ownedGames = userData?.games?.filter(g => {
                 return (cat ? g.categories.some(c => c.id === cat) : true)
                 && (mec ? g.mechanics.some(m => m.id === mec) : true)
-                && (players ? g.max_players >= parseInt(players as string) : true)
+                && (players && players !== "any" && players !== "players" ? g.max_players >= parseInt(players as string) : true)
                 && (q ? g.name.toLowerCase().includes(q as string) : true);
             }).map(g => {
                 g.owned = true; 
@@ -78,7 +78,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return;
         }
 
-        const searchQuery = buildSearchQuery(q as string, parseInt(p as string ?? "0"), pageLength, cat as string, mec as string, parseInt(players as string));
+        const searchQuery = buildSearchQuery(q as string, parseInt(p as string ?? "0"), pageLength, cat as string, mec as string, players as string);
         
 
         console.log("Searchquery: ", searchQuery);

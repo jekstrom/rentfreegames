@@ -61,7 +61,7 @@ export default function UserGameSessions() {
                     ? <section>
                         <Grid container sx={{ display: 'flex', alignItems: 'center' }} spacing={{ xs: 1, md: 1 }} columns={{ xs: 12, sm: 12, md: 12 }}>
                             {data.map((session) => (
-                                <Grid item xs={12} sm={12} md={12}>
+                                <Grid key={session.id} item xs={12} sm={12} md={12}>
                                     <Paper elevation={5} sx={{ p: 2, display: 'flex', flexDirection: 'column', height: "100%" }}>
                                         <Grid container>
                                             <Grid item xs={12} sm={12} md={12}>
@@ -98,7 +98,11 @@ export default function UserGameSessions() {
                             }
                         </Grid>
                     </section>
-                    : <></>
+                    : <section>
+                        <Typography variant="h5" component="div">
+                            You have no game sessions yet.
+                        </Typography>
+                    </section>
             }
 
         </div>

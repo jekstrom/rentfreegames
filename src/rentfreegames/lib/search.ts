@@ -99,7 +99,7 @@ export const getMechanics = async (today: string) => {
     return mechanics;
 }
 
-export const buildSearchQuery = (query: string, page: number, pageLength: number, category: string, mechanic: string, players?: number) => {
+export const buildSearchQuery = (query: string, page: number, pageLength: number, category: string, mechanic: string, players?: string) => {
     let searchQuery = `${endpoint}?client_id=${client_id}&limit=${pageLength}&skip=${page * pageLength ?? 0}`;
     console.log("Page: ", page);
     console.log("pageLength: ", page);
@@ -114,7 +114,10 @@ export const buildSearchQuery = (query: string, page: number, pageLength: number
         searchQuery += `&mechanics=${mechanic.substring(0, 50)}`;
     }
     if (players) {
-        searchQuery += `&gt_max_players=${players - 1}`;
+        if (players === "any") {
+            players = "1";
+        }
+        searchQuery += `&gt_max_players=${parseInt(players) - 1}`;
     }
     return searchQuery;
 }

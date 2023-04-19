@@ -53,12 +53,21 @@ export default function PlayerList({
         <div>
             <article>
                 <h2 className={utilStyles.headingMd}>
-                    {players?.length} Players
+                    {
+                        players?.length === 1 
+                        ? "Invite your friends to join the game!"
+                        : `${players?.length} Players`
+                    }
                 </h2>
-                <Button onClick={() => setPlayerState(!playerState)}><sub>{playerState ? "show" : "hide"}</sub></Button>
+                {
+                    players?.length > 1 
+                    ? <Button onClick={() => setPlayerState(!playerState)}><sub>{playerState ? "show" : "hide"}</sub></Button>
+                    : <></>
+                }
+                
             </article>
             {
-                playerState
+                players?.length > 1 && playerState
                     ? <Grid container spacing={1}>
                         <Grid item>
                             <AvatarGroup max={5}>

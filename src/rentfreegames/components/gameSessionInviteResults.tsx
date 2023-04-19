@@ -97,7 +97,7 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(user: User, userId: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean): Game[] {
+function getUserGames(user: User, userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, sessionPlayerCount?: number): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     user.games.forEach(game => {
@@ -109,9 +109,13 @@ function getUserGames(user: User, userId: string, query: string, playerCount?: n
     if (query) {
         games = games.filter(g => g.name.toLowerCase().includes(query.toLowerCase()));
     }
-
-    if (playerCount && playerCount > 1) {
-        games = games.filter(g => g.max_players >= playerCount);
+    
+    if (playerCount) {
+        if (playerCount === "players") {
+            games = getGamesByPlayerCount(games, sessionPlayerCount);
+        } else if (parseInt(playerCount) > 1) {
+            games = games.filter(g => g.max_players >= parseInt(playerCount));
+        } 
     }
 
     if (mechanic) {
@@ -139,15 +143,17 @@ export default function GameSessionInviteResults({
     playerCount,
     mechanic,
     category,
-    owned
+    owned,
+    sessionPlayerCount,
 }: {
     title: string,
     id: string,
     query: string,
-    playerCount?: number,
+    playerCount?: string,
     mechanic?: Mechanic,
     category?: Category,
-    owned?: boolean
+    owned?: boolean,
+    sessionPlayerCount?: number
 }) {
     const router = useRouter();
 
@@ -171,7 +177,7 @@ export default function GameSessionInviteResults({
         router.push(`/games?inviteId=${id}`)
     }
 
-    const games = getUserGames(data.user, data.user.id, query, playerCount, mechanic, category, owned);
+    const games = getUserGames(data.user, data.user.id, query, playerCount, mechanic, category, owned, sessionPlayerCount);
 
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>

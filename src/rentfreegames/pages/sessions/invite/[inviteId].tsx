@@ -55,9 +55,9 @@ export default function SessionDetails() {
 
     const { query } = useRouter()
 
-    const [category, changeCategory] = React.useState(undefined);
-    const [mechanic, changeMechanic] = React.useState(undefined);
-    const [playerCount, setPlayers] = React.useState(2);
+    const [category, changeCategory] = React.useState(null);
+    const [mechanic, changeMechanic] = React.useState(null);
+    const [playerCount, setPlayers] = React.useState("any");
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
 
@@ -93,8 +93,8 @@ export default function SessionDetails() {
         setQueryValue(event.target.value);
     };
 
-    const handleChangePlayers = (event: SelectChangeEvent<number>, child: ReactNode) => {
-        setPlayers(event.target.value as number);
+    const handleChangePlayers = (event: SelectChangeEvent<string>, child: ReactNode) => {
+        setPlayers(event.target.value as string);
     };
 
     const onChangeCategory = (event: any, newValue: Category | null) => {
@@ -153,7 +153,7 @@ export default function SessionDetails() {
 
                                         <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
 
-                                        <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} title={"Your Games"} />
+                                        <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} sessionPlayerCount={data?.gameSession?.users?.length} title={"Your Games"} />
                                     </section>)
                                 : <></>
                         }

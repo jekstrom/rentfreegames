@@ -5,12 +5,27 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { ReactNode } from 'react';
 
+function getItems(isSearch?: boolean) {
+    let items = [];
+    if (!isSearch) {
+        items.push(<MenuItem key="players" value={"players"}>Players</MenuItem>);    
+    }
+    items.push(<MenuItem key="players" value={"any"}>Any</MenuItem>);    
+    for (let i = 2; i < 10; i++) {
+        items.push(<MenuItem key={i.toString()} value={i.toString()}>{i}</MenuItem>);
+    }
+    items.push(<MenuItem key="10" value={"10"}>10+</MenuItem>);
+    return items;
+}
+
 export default function SearchFiltersPlayers({
     player,
-    setPlayers
+    setPlayers,
+    isSearch
 }: {
-    player?: number,
-    setPlayers: (event: SelectChangeEvent<number>, child: ReactNode) => void
+    player?: string,
+    setPlayers: (event: SelectChangeEvent<string>, child: ReactNode) => void,
+    isSearch?: boolean
 }) {
     return (
         <Box sx={{ padding: 0 }}>
@@ -23,16 +38,9 @@ export default function SearchFiltersPlayers({
                     label="Players"
                     onChange={setPlayers}
                 >
-                    <MenuItem value={undefined}>Any</MenuItem>
-                    <MenuItem value={2}>2</MenuItem>
-                    <MenuItem value={3}>3</MenuItem>
-                    <MenuItem value={4}>4</MenuItem>
-                    <MenuItem value={5}>5</MenuItem>
-                    <MenuItem value={6}>6</MenuItem>
-                    <MenuItem value={7}>7</MenuItem>
-                    <MenuItem value={8}>8</MenuItem>
-                    <MenuItem value={9}>9</MenuItem>
-                    <MenuItem value={10}>10+</MenuItem>
+                    {
+                        getItems(isSearch)
+                    }
                 </Select>
             </FormControl>
         </Box>

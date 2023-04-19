@@ -37,9 +37,9 @@ export function getSession(id: string) {
 }
 
 export default function SessionDetails() {
-    const [category, changeCategory] = React.useState(undefined);
-    const [mechanic, changeMechanic] = React.useState(undefined);
-    const [playerCount, setPlayers] = React.useState(undefined);
+    const [category, changeCategory] = React.useState(null);
+    const [mechanic, changeMechanic] = React.useState(null);
+    const [playerCount, setPlayers] = React.useState("players");
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
     const [ratingSort, setRating] = React.useState("none")
@@ -64,8 +64,8 @@ export default function SessionDetails() {
         setQueryValue(event.target.value);
     };
 
-    const handleChangePlayers = (event: SelectChangeEvent<number>, child: ReactNode) => {
-        setPlayers(event.target.value as number);
+    const handleChangePlayers = (event: SelectChangeEvent<string>, child: ReactNode) => {
+        setPlayers(event.target.value);
     };
 
     const onChangeCategory = (event: any, newValue: Category | null) => {

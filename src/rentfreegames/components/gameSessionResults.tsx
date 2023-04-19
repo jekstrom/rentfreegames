@@ -19,24 +19,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { tomato } from '../styles/theme';
 
-const StyledRating = styled(Rating)({
-    '& .MuiRating-iconFilled': {
-        color: tomato
-    },
-    '& .MuiRating-iconHover': {
-        color: tomato
-    },
-});
-
-async function handleRating(sessionId: string, gameId: string, rating: number) {
-    console.log("Handle rating: ", sessionId, gameId, rating);
-    if (gameId) {
-        const response = await postData(`/api/sessions/${sessionId}`, { gameId, rating });
-        console.log("Response: ", response);
-    }
-};
-
-function FormRow({ sessionId, row }: { sessionId: string, row: Game }) {
+function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Game, handleRating: any }) {
     return (
         <React.Fragment>
             <Grid item xs={12} sm={12} md={4}>
@@ -85,14 +68,12 @@ function FormRow({ sessionId, row }: { sessionId: string, row: Game }) {
                     <Grid item container xs={12} >
                         <Grid item xs={8} >
                             <Box sx={{ '& > legend': { mt: 2 }, marginLeft: "8px", marginBottom: "8px" }}>
-                                <StyledRating
+                                <Rating
                                     name="rating"
-                                    defaultValue={row.rating ?? 2.5}
-                                    sx={{ fontSize: 24 }}
-                                    getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                                    value={row.rating}
+                                    sx={{ fontSize: 24, color: tomato }}
                                     precision={0.5}
                                     onChange={async (event, newValue) => {
-                                        console.log("onChange", newValue);
                                         await handleRating(sessionId, row.id, newValue);
                                     }}
                                     icon={<FavoriteIcon fontSize="inherit" />}
@@ -143,13 +124,15 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(users: User[], userId: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
+function getUserGames(users: User[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     users.forEach(user => {
         user.games.forEach(game => {
             game.owned = user.id === userId;
             game.ownedBy = [{ name: user.name, userId: user.id }];
+            game.rating = 2.5;
+            game.avg_rating = 2.5;
             if (userRatings) {
                 const gameRatings = userRatings.filter(r => r.gameId === game.id).map(r => r.rating);
                 game.rating = userRatings.find(r => r.gameId === game.id && r.userId === userId)?.rating ?? 2.5;
@@ -167,10 +150,12 @@ function getUserGames(users: User[], userId: string, query: string, playerCount?
         games = games.filter(g => g.name.toLowerCase().includes(query.toLowerCase()));
     }
 
-    if (playerCount && playerCount > 1) {
-        games = games.filter(g => g.max_players >= playerCount);
-    } else {
-        games = getGamesByPlayerCount(games, users.length)
+    if (playerCount) {
+        if (playerCount === "players") {
+            games = getGamesByPlayerCount(games, users.length);
+        } else if (parseInt(playerCount) > 1) {
+            games = games.filter(g => g.max_players >= parseInt(playerCount));
+        } 
     }
 
     if (mechanic) {
@@ -219,7 +204,7 @@ export default function GameSessionResults({
     title: string,
     id: string,
     query: string,
-    playerCount?: number,
+    playerCount?: string,
     mechanic?: Mechanic,
     category?: Category,
     owned?: boolean,
@@ -227,6 +212,7 @@ export default function GameSessionResults({
 }) {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
+    const [ratings, setRatings] = React.useState(true)
 
     const { data, error, isLoading, isValidating, url } = getSession(id);
     const { mutate } = useSWRConfig()
@@ -243,6 +229,12 @@ export default function GameSessionResults({
         console.log("data: ", data);
         return null;
     }
+
+    const handleRating = async (sessionId: string, gameId: string, rating: number) => {
+        if (gameId) {
+            const response = await postData(`/api/sessions/${sessionId}`, { gameId, rating });
+        }
+    };
 
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>

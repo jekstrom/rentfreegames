@@ -119,7 +119,7 @@ export default function GameSearchResults({
     title: string,
     queryValue: string,
     curPage: number,
-    playerCount: number,
+    playerCount: string,
     category: string,
     mechanic: string,
     owned: boolean
@@ -137,7 +137,6 @@ export default function GameSearchResults({
     if (isLoading) {
         console.log("Loading...");
         return <img src="../public/Rentfreeanim.gif" />
-        // return <CircularProgress />
     }
     if (!data) {
         console.log("data: ", data);

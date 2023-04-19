@@ -19,7 +19,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export function search(queryValue: string, curPage: number, playerCount: number, category: any, mechanic: any, owned: boolean) {
+export function search(queryValue: string, curPage: number, playerCount: string, category: any, mechanic: any, owned: boolean) {
     const url = `/api/search?q=${queryValue ?? ""}&p=${curPage - 1}&players=${playerCount}&cat=${category?.id ?? ""}&mec=${mechanic?.id ?? ""}&owned=${owned}`
     const { data, error, isLoading } = useSWR<
         {
@@ -46,7 +46,7 @@ export default function Games({
     const [curPage, changePage] = React.useState(1);
     const [category, changeCategory] = React.useState(null);
     const [mechanic, changeMechanic] = React.useState(null);
-    const [playerCount, setPlayers] = React.useState(2);
+    const [playerCount, setPlayers] = React.useState("any");
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
 
@@ -67,8 +67,8 @@ export default function Games({
         return null;
     }
 
-    const handleChangePlayers = (event: SelectChangeEvent<number>, child: ReactNode) => {
-        setPlayers(event.target.value as number);
+    const handleChangePlayers = (event: SelectChangeEvent<string>, child: ReactNode) => {
+        setPlayers(event.target.value as string);
     };
 
     const handleChange = (event: React.ChangeEvent<unknown>, value: number) => {
@@ -113,7 +113,7 @@ export default function Games({
                         <SearchFiltersMechanic mechanics={data.mechanics} mechanic={mechanic} setMechanic={changeMechanic} />
                     </Grid>
                     <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
-                        <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} />
+                        <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} isSearch={true} />
                     </Grid>
                     <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
                         <SearchFiltersOwned owned={owned} setOwned={onOwnedChange} />
@@ -136,6 +136,11 @@ export default function Games({
                         mechanic={mechanic}
                         owned={owned}
                     />
+                </Grid>
+                <Grid item xs={12} sm={12} md={12} style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Stack spacing={1}>
+                        <Pagination count={data.totalPages} page={curPage} onChange={handleChange} shape="rounded" />
+                    </Stack>
                 </Grid>
             </Grid>
         </Layout>
