@@ -14,11 +14,11 @@ import SearchFiltersCategory from '../../components/searchFiltersCategory'
 import SearchFiltersMechanic from '../../components/searchFiltersMechanic'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
+import SearchSortRating from '../../components/searchRatingSort'
 import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
 
 export function getSession(id: string) {
     const url = (id ? `/api/sessions/${id}` : null)
@@ -42,6 +42,7 @@ export default function SessionDetails() {
     const [playerCount, setPlayers] = React.useState(undefined);
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
+    const [ratingSort, setRating] = React.useState("none")
 
     const { query } = useRouter()
     const { data, error, isLoading, isValidating } = getSession(query?.id as string)
@@ -74,6 +75,10 @@ export default function SessionDetails() {
 
     const onOwnedChange = (event) => {
         setOwned(event.target.checked);
+    };
+
+    const onRatingSortChange = (event) => {
+        setRating(event.target.value);
     };
 
     const copy = () => {
@@ -130,12 +135,18 @@ export default function SessionDetails() {
                     <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
                         <SearchFiltersOwned owned={owned} setOwned={onOwnedChange} />
                     </Grid>
+                    
+                </Grid>
+                <Grid container columns={{ xs: 12, sm: 12, md: 12 }}>
+                    <Grid item xs={12} sm={12} md={12}>
+                        <SearchSortRating ratingSort={ratingSort} setRating={onRatingSortChange} label="Sort by" />
+                    </Grid>
                 </Grid>
             </section>
 
             <PlayerList players={data.gameSession.users} user={data.sessionUser} host={data.gameSession.createdBy} />
 
-            <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Games"} />
+            <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Games"} />
         </Layout>
     )
 }

@@ -10,6 +10,9 @@ const DATABASE = { id: "Session Database" };
 const CONTAINER = { id: "Session Container" };
 
 function cleanUser(user: User) {
+  if (!user) {
+    return user;
+  }
   (user as any).email = null;
   (user as any).sub = null;
   delete user.sub;
@@ -30,7 +33,8 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
         created: new Date().toUTCString(),
         inviteId: `inv--${nanoid()}`,
         createdBy: cleanedUser,
-        users: [cleanedUser]
+        users: [cleanedUser],
+        userGameRatings: []
       }
     );
 
@@ -47,7 +51,8 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
       created: new Date(result.resource.created),
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
-      users: result.resource.users
+      users: result.resource.users,
+      userGameRatings: result.resource.userGameRatings
     };
   }
   catch (ex) {
@@ -74,7 +79,8 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
         created: existingSession.created,
         inviteId: existingSession.inviteId,
         createdBy: existingSession.createdBy,
-        users: [...existingSession.users, user]
+        users: [...existingSession.users, user],
+        userGameRatings: existingSession.userGameRatings
       }
     );
 
@@ -90,7 +96,8 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
       created: new Date(result.resource.created),
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
-      users: result.resource.users
+      users: result.resource.users,
+      userGameRatings: result.resource.userGameRatings
     };
   }
   catch (ex) {
@@ -189,7 +196,86 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
             created: gameSession.created,
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
-            users: gameSession.users
+            users: gameSession.users,
+            userGameRatings: gameSession.userGameRatings
+          }
+        );
+
+        if (result.statusCode >= 400) {
+          console.log(result.statusCode);
+          console.log(result.substatus);
+          return null;
+        }
+      }
+      return gameSessions;
+    }
+  }
+  return [];
+}
+
+export async function updateSession(gameSession: Session): Promise<Session> {
+  const { database } = await client.databases.createIfNotExists(DATABASE);
+  const { container } = await database.containers.createIfNotExists(CONTAINER);
+
+  if (gameSession) {
+    const result = await container.items.upsert(
+      {
+        id: gameSession.id,
+        title: gameSession.title,
+        created: gameSession.created,
+        inviteId: gameSession.inviteId,
+        createdBy: gameSession.createdBy,
+        users: gameSession.users,
+        userGameRatings: gameSession.userGameRatings
+      }
+    );
+
+    if (result.statusCode >= 400) {
+      console.log(result.statusCode);
+      console.log(result.substatus);
+      return null;
+    }
+  }
+
+  return gameSession;
+}
+
+export async function updateUserGameSession(sessionId: string, user: User): Promise<Session[]> {
+  const { database } = await client.databases.createIfNotExists(DATABASE);
+  const { container } = await database.containers.createIfNotExists(CONTAINER);
+
+  if (user) {
+    const cleanedUser = cleanUser(user);
+    const { resources } = await container.items
+      .query({
+        query: "SELECT c FROM c \
+        JOIN users in c.users \
+        WHERE users.id = @id",
+        parameters: [{ name: "@id", value: user.id }]
+      })
+      .fetchAll();
+
+    if (resources && resources.length > 0) {
+      let gameSessions = [] as Session[];
+      gameSessions = resources.map(r => r.c as Session).filter(s => s.id === sessionId);
+
+      for (const gameSession of gameSessions) {
+        gameSession.users = gameSession.users.map(u => {
+          if (u.id === user.id) {
+            u.games = user.games;
+          }
+          return u;
+        });
+
+        const result = await container.items.upsert(
+          {
+            id: gameSession.id,
+            title: gameSession.title,
+            created: gameSession.created,
+            inviteId: gameSession.inviteId,
+            createdBy: gameSession.createdBy,
+            users: gameSession.users,
+            userGameRatings: gameSession.userGameRatings
           }
         );
 

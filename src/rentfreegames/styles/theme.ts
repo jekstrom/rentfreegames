@@ -3,10 +3,7 @@ import { createTheme } from '@mui/material/styles';
 declare module '@mui/material/styles' {
     interface PaletteOptions {
         custom?: {
-            light: React.CSSProperties['color'],
-            main: React.CSSProperties['color'],
-            dark: React.CSSProperties['color'],
-            contrastText: React.CSSProperties['color'],
+            tomato: React.CSSProperties['color'],
         };
     }
 }
@@ -18,6 +15,7 @@ const gold = '#ffd42a';
 const mint = '#61c9a8';
 const richBlack = '#01161e';
 const brains = '#762866'
+export const tomato = '#ff6347';
 
 export const theme = createTheme({
     palette: {

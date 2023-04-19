@@ -4,15 +4,14 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import { Game } from '../interfaces';
-import { Typography } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
-import StarOutlineIcon from '@mui/icons-material/StarOutline';
+import { Tooltip, Typography } from '@mui/material';
+import AddCircleIcon from '@mui/icons-material/AddCircle'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import GroupIcon from '@mui/icons-material/Group';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BalanceIcon from '@mui/icons-material/Balance';
 import { useSession } from 'next-auth/react'
 import { search } from '../pages/games';
-import CircularProgress from '@mui/material/CircularProgress';
 import { useSWRConfig } from "swr"
 
 const Img = styled('img')({
@@ -43,20 +42,24 @@ function FormRow({ row, numGames, handleToggle }: { row: Game, numGames: number,
                                         <img src={row.images.small} style={{ width: "100px", padding: "1px" }} />
                                         : <></>
                                 }
-                                <Typography gutterBottom variant="overline" component="div" sx={{ fontSize: 14, padding: "3px" }}>
-                                    {row.name}
-                                </Typography>
+                                <Tooltip title={row.name}>
+                                    <Typography gutterBottom variant="overline" component="div" sx={ row.name.length > 15 ? { fontSize: 10, padding: "1px" } : { fontSize: 14, padding: "3px" }}>
+                                        {row.name.length > 50 ? row.name.substring(0, 50) + "..." : row.name}
+                                    </Typography>
+                                </Tooltip>
                             </Grid>
                         </Grid>
                         <Grid item xs container direction="column" spacing={2}>
                             <Grid item sx={{ textAlign: "right" }}>
-                                <Typography variant="subtitle1" component="div">
-                                    {
-                                        row.owned 
-                                            ? <StarIcon sx={{ color: 'secondary.light', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} /> 
-                                            : <StarOutlineIcon sx={{ color: 'primary.main', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} />
-                                    }
-                                </Typography>
+                                <Tooltip title={row.owned ? "Remove from collection" : "Add to collection"}>
+                                    <Typography variant="subtitle1" component="div">
+                                        {
+                                            row.owned 
+                                                ? <AddCircleIcon sx={{ color: 'secondary.light', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} /> 
+                                                : <AddCircleOutlineIcon sx={{ color: 'primary.main', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} />
+                                        }
+                                    </Typography>
+                                </Tooltip>
                             </Grid>
                             <Grid item sx={{ textAlign: "right" }}>
                                 <Typography variant="subtitle1" component="div" sx={{ fontSize: 14 }}>

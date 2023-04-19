@@ -1,4 +1,4 @@
-import { Grid, ListItemButton } from '@mui/material';
+import { Grid, Button, Tooltip } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -7,6 +7,7 @@ import * as React from 'react';
 import { User } from '../interfaces';
 import utilStyles from '../styles/utils.module.css';
 import { theme } from '../styles/theme';
+import AvatarGroup from '@mui/material/AvatarGroup';
 
 function stringToColor(string: string) {
     let hash = 0;
@@ -46,44 +47,71 @@ export default function PlayerList({
     user: User,
     host: User
 }) {
+    const [playerState, setPlayerState] = React.useState(true)
+
     return (
         <div>
             <article>
-                <h2 className={utilStyles.headingMd}>Players</h2>
+                <h2 className={utilStyles.headingMd}>
+                    {players?.length} Players
+                </h2>
+                <Button onClick={() => setPlayerState(!playerState)}><sub>{playerState ? "show" : "hide"}</sub></Button>
             </article>
-            <List
-                sx={{ maxWidth: '20rem', bgcolor: 'background.paper' }}
-                aria-label="players"
-            >
-                {players?.map(({ image, id, name }) => (
-                        <ListItem disableGutters key={id} role={undefined} sx={{ padding: '0' }}>
-                            <ListItemText
-                                sx={
-                                    host.id === id
-                                        ? { background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`, color: 'primary.contrastText', p: 2 }
-                                        : { bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }
-                                }
-                                primary={
-                                    <React.Fragment>
-                                        <Grid container spacing={1}>
-                                            <Grid item>
+            {
+                playerState
+                    ? <Grid container spacing={1}>
+                        <Grid item>
+                            <AvatarGroup max={5}>
+                                {
+                                    players.length > 1
+                                        ? players?.map(({ image, id, name }) => (
+                                            <Tooltip title={name} key={id}>
                                                 {
                                                     image && image.length > 0
                                                         ? <Avatar src={image} />
                                                         : <Avatar {...stringAvatar(name ?? id)} />
                                                 }
-                                            </Grid>
-                                            <Grid item style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                                {name ?? id}
-                                            </Grid>
-                                        </Grid>
-                                    </React.Fragment>
+                                            </Tooltip>
+                                        ))
+                                        : <></>
                                 }
-                                secondary={host.id === id ? 'Host' : ''}
-                            />
-                        </ListItem>
-                ))}
-            </List>
+                            </AvatarGroup>
+                        </Grid>
+                    </Grid>
+                    : <List
+                        sx={{ maxWidth: '20rem', bgcolor: 'background.paper' }}
+                        aria-label="players"
+                    >
+                        {players?.map(({ image, id, name }) => (
+                            <ListItem disableGutters key={id} role={undefined} sx={{ padding: '0' }}>
+                                <ListItemText
+                                    sx={
+                                        host.id === id
+                                            ? { background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`, color: 'primary.contrastText', p: 2 }
+                                            : { bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }
+                                    }
+                                    primary={
+                                        <React.Fragment>
+                                            <Grid container spacing={1}>
+                                                <Grid item>
+                                                    {
+                                                        image && image.length > 0
+                                                            ? <Avatar src={image} />
+                                                            : <Avatar {...stringAvatar(name ?? id)} />
+                                                    }
+                                                </Grid>
+                                                <Grid item style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                                    {name ?? id}
+                                                </Grid>
+                                            </Grid>
+                                        </React.Fragment>
+                                    }
+                                    secondary={host.id === id ? 'Host' : ''}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+            }
         </div>
     )
 }

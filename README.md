@@ -112,10 +112,22 @@ expire game sessions
 
 add a heart for a wishlist collection (inc. amazon affiliate links)
 
-import collection from bgg
+change add game icon to plus
 
-hide emails from client
+import collection from bgg
 
 passwordless logins/guest users
 
 profile page
+
+option to make invite link public to all players in a session
+
+filter session games by any number of players 
+
+send cal inv to people
+
+scan barcode to add game
+
+show empty session list on main page
+
+link to owned games on main page

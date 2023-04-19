@@ -2,7 +2,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BalanceIcon from '@mui/icons-material/Balance';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
-import { Typography } from '@mui/material';
+import { Link, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
@@ -12,43 +12,51 @@ import { styled } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import * as React from 'react';
 import { useSWRConfig } from "swr";
-import { Category, Game, Mechanic, Owner, User } from '../interfaces';
+import { Category, Game, Mechanic, Owner, User, GameRating } from '../interfaces';
 import { getSession } from '../pages/sessions/[id]';
+import Rating from '@mui/material/Rating';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { tomato } from '../styles/theme';
 
-const Img = styled('img')({
-    margin: 'auto',
-    display: 'block',
-    maxWidth: '100%',
-    maxHeight: '100%',
+const StyledRating = styled(Rating)({
+    '& .MuiRating-iconFilled': {
+        color: tomato
+    },
+    '& .MuiRating-iconHover': {
+        color: tomato
+    },
 });
 
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-    ...theme.typography.body2,
-    padding: theme.spacing(1),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-}));
+async function handleRating(sessionId: string, gameId: string, rating: number) {
+    console.log("Handle rating: ", sessionId, gameId, rating);
+    if (gameId) {
+        const response = await postData(`/api/sessions/${sessionId}`, { gameId, rating });
+        console.log("Response: ", response);
+    }
+};
 
-function FormRow({ row }: { row: Game }) {
+function FormRow({ sessionId, row }: { sessionId: string, row: Game }) {
     return (
         <React.Fragment>
             <Grid item xs={12} sm={12} md={4}>
                 <Paper elevation={2} sx={{ height: "100%" }}>
-                    <Grid item xs={12} sm container padding={1} >
-                        <Grid item xs container direction="column" spacing={2}>
-                            <Grid item xs padding="3px">
+                    <Grid item xs={12} sm sx={{ height: "88%" }} container padding={1} >
+                        <Grid item xs={8} sx={{ height: "100%" }} container direction="column" spacing={2}>
+                            <Grid item xs={4} sx={{ height: "100%" }} padding="3px">
                                 {
                                     row.images.small ?
-                                        <img src={row.images.small} style={{ width: "100px", padding: "1px" }} />
+                                        <Link target="_blank" href={row.url}><img src={row.images.small} style={{ width: "100px", padding: "1px" }} /></Link>
                                         : <></>
                                 }
-                                <Typography gutterBottom variant="overline" component="div" sx={{ fontSize: 14, padding: "3px" }}>
-                                    {row.name}
-                                </Typography>
+                                <Tooltip title={row.name}>
+                                    <Typography gutterBottom variant="overline" component="div" sx={row.name.length > 15 ? { fontSize: 10, padding: "1px" } : { fontSize: 14, padding: "3px" }}>
+                                        {row.name.length > 50 ? row.name.substring(0, 50) + "..." : row.name}
+                                    </Typography>
+                                </Tooltip>
                             </Grid>
                         </Grid>
-                        <Grid item xs container direction="column" spacing={3}>
+                        <Grid item xs={4} container direction="column" spacing={3}>
                             <Grid item sx={{ textAlign: "right" }}>
                                 <Typography variant="subtitle1" component="div" sx={{ fontSize: 14 }}>
                                     <GroupIcon sx={{ fontSize: 14 }} /> {row.min_players} - {row.max_players}
@@ -73,7 +81,32 @@ function FormRow({ row }: { row: Game }) {
                                 </Typography>
                             </Grid>
                         </Grid>
-
+                    </Grid>
+                    <Grid item container xs={12} >
+                        <Grid item xs={8} >
+                            <Box sx={{ '& > legend': { mt: 2 }, marginLeft: "8px", marginBottom: "8px" }}>
+                                <StyledRating
+                                    name="rating"
+                                    defaultValue={row.rating ?? 2.5}
+                                    sx={{ fontSize: 24 }}
+                                    getLabelText={(value: number) => `${value} Heart${value !== 1 ? 's' : ''}`}
+                                    precision={0.5}
+                                    onChange={async (event, newValue) => {
+                                        console.log("onChange", newValue);
+                                        await handleRating(sessionId, row.id, newValue);
+                                    }}
+                                    icon={<FavoriteIcon fontSize="inherit" />}
+                                    emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                                />
+                            </Box>
+                        </Grid>
+                        <Grid item xs={4}>
+                            <Box sx={{ display: 'flex', justifyContent: "right"}}>
+                                <Typography variant="subtitle2" component="div" sx={{ color: "secondary.main", fontSize: 10, marginRight: "8px" }}>
+                                    <FavoriteIcon sx={{ color: tomato, fontSize:14 }}/> {row.rating ? `AVG ${row.avg_rating}` : ""}
+                                </Typography>
+                            </Box>
+                        </Grid>
                     </Grid>
                 </Paper>
             </Grid>
@@ -86,7 +119,6 @@ function getGamesByPlayerCount(games: Game[], numPlayers: number): Game[] {
 }
 
 function mergeGameOwners(games: Game[]): Game[] {
-    // Merge games' owners with same BGGId
     for (const game of games) {
         const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.every(ob => ob.userId !== o.userId)));
         if (otherGame) {
@@ -111,13 +143,20 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(users: User[], userId: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean): Game[] {
+function getUserGames(users: User[], userId: string, query: string, playerCount?: number, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     users.forEach(user => {
         user.games.forEach(game => {
             game.owned = user.id === userId;
             game.ownedBy = [{ name: user.name, userId: user.id }];
+            if (userRatings) {
+                const gameRatings = userRatings.filter(r => r.gameId === game.id).map(r => r.rating);
+                game.rating = userRatings.find(r => r.gameId === game.id && r.userId === userId)?.rating ?? 2.5;
+                if (gameRatings && gameRatings.length > 0) {
+                    game.avg_rating = Math.round((gameRatings.reduce((r, acc) => acc += r) / gameRatings.length) * 2) / 2 ?? 2.5;
+                }
+            }
             games.push(game);
         });
     });
@@ -147,9 +186,24 @@ function getUserGames(users: User[], userId: string, query: string, playerCount?
         games = games.filter(g => g.owned);
     }
 
-    
+    return getUniqueGames(games).sort((a, b) => {
+        if (ratingSort === "user") {
+            return b.rating - a.rating;
+        } else if (ratingSort === "session") {
+            return b.avg_rating - a.avg_rating;
+        }
+    });
+}
 
-    return getUniqueGames(games);
+const postData = async (url: string, data: any) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        body: JSON.stringify(data)
+    });
+
+    const json = await response.json();
+    return json
 }
 
 export default function GameSessionResults({
@@ -159,7 +213,8 @@ export default function GameSessionResults({
     playerCount,
     mechanic,
     category,
-    owned
+    owned,
+    ratingSort
 }: {
     title: string,
     id: string,
@@ -167,7 +222,8 @@ export default function GameSessionResults({
     playerCount?: number,
     mechanic?: Mechanic,
     category?: Category,
-    owned?: boolean
+    owned?: boolean,
+    ratingSort?: string
 }) {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
@@ -196,8 +252,8 @@ export default function GameSessionResults({
             <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                 <Grid container item spacing={3}>
                     {
-                        getUserGames(data.gameSession.users, data.sessionUser.id, query, playerCount, mechanic, category, owned).map((row) => (
-                            <FormRow row={row} key={row.id} />
+                        getUserGames(data.gameSession.users, data.sessionUser.id, query, playerCount, mechanic, category, owned, data.gameSession.userGameRatings, ratingSort).map((row) => (
+                            <FormRow sessionId={data.gameSession.id} row={row} key={row.id} />
                         ))
                     }
                 </Grid>

@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-export default function SearchFiltersCategory({
+export default function SearchFiltersOwned({
     owned,
     setOwned
 }: {

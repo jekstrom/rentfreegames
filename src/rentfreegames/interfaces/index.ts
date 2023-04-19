@@ -7,31 +7,6 @@ export interface Owner {
     name?: string
 }
 
-// export interface Game {
-//     BGGId: string
-//     Name: string
-//     Description: string
-//     YearPublished: string
-//     GameWeight: string
-//     AvgRating: string
-//     BayesAvgRating: string
-//     StdDev: string
-//     MinPlayers: string
-//     MaxPlayers: string
-//     ComAgeRec: string
-//     BestPlayers: string
-//     GoodPlayers: string
-//     MfgPlaytime: string
-//     ComMinPlaytime: string
-//     ComMaxPlaytime: string
-//     MfgAgeRec: string
-//     Family: string
-//     ImagePath: string
-//     Rank: string,
-//     owned?: boolean,
-//     ownedBy?: [Owner]
-// }
-
 export interface Game {
     id:                          string;
     handle:                      string;
@@ -113,6 +88,8 @@ export interface Game {
     description_preview:         string;
     owned:                       boolean;
     ownedBy?:                    [Owner]
+    rating?:                     number,
+    avg_rating?:                 number
   }
   
   export interface Category {
@@ -186,5 +163,12 @@ export interface Session {
     inviteId: string,
     users: User[],
     createdBy: User,
-    games?: Game[]
+    games?: Game[],
+    userGameRatings?: GameRating[]
+}
+
+export interface GameRating {
+    gameId: string,
+    userId: string,
+    rating: number
 }

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from '../auth/[...nextauth]'
-import { getSessionData } from '../../../lib/sessions'
+import { getSessionData, updateSession } from '../../../lib/sessions'
 import { getCategories, getMechanics } from '../../../lib/search'
 import { getUserData } from '../../../lib/users'
 import { User } from '../../../interfaces'
@@ -24,6 +24,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(401).json({ message: "You must be logged in." });
         return;
     }
+
     const userData = cleanUser(await getUserData(userSession.user.email));
 
     const { query } = req
@@ -33,15 +34,52 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return;
     }
 
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    if (req.method === 'POST') {
+        const payload = JSON.parse(req.body);
+        if (!payload.gameId) {
+            res.status(400).json({ message: "Missing gameId." });
+            return;
+        }
+        if (!payload.rating) {
+            res.status(400).json({ message: "Missing rating." });
+            return;
+        }
 
-    let gameSessions = await getSessionData(id as string);
-    let gameSession = gameSessions[0];
+        const gameSessions = await getSessionData(id as string);
+        const gameSession = gameSessions[0];
 
-    const categories = await getCategories(today);
-    const mechanics = await getMechanics(today);
+        if (!gameSession.users.some(u => u.id == userData.id)) {
+            console.log(`User ${userData.id} not found in session ${id}.`);
+            res.status(404).json({ message: "User not found in session." });
+            return;
+        }
 
-    return gameSession
-        ? res.status(200).json({gameSession, categories, mechanics, sessionUser: userData})
-        : res.status(404).json({ message: `User with id: ${id} not found.` })
+        gameSession.userGameRatings = gameSession.userGameRatings || [];
+        if (!gameSession.userGameRatings.some(u => u.userId == userData.id && u.gameId == payload.gameId)) {
+            gameSession.userGameRatings.push({ userId: userData.id, gameId: payload.gameId, rating: payload.rating });
+        }
+        gameSession.userGameRatings.forEach(u => {
+            if (u.userId == userData.id && u.gameId == payload.gameId) {
+                u.rating = payload.rating;
+            }
+        });
+
+        console.log("Updating user game session...", JSON.stringify(gameSession.userGameRatings));
+
+        const newSession = await updateSession(gameSession);
+
+        return res.json(newSession);
+    } else {
+        const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+        let gameSessions = await getSessionData(id as string);
+        let gameSession = gameSessions[0];
+
+        const categories = await getCategories(today);
+        const mechanics = await getMechanics(today);
+
+        return gameSession
+            ? res.status(200).json({gameSession, categories, mechanics, sessionUser: userData})
+            : res.status(404).json({ message: `User with id: ${id} not found.` })
+    }
 }
