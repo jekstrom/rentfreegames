@@ -33,7 +33,7 @@ function stringAvatar(name: string) {
         sx: {
             bgcolor: stringToColor(name),
         },
-        children: name.indexOf(' ') > 0 ? `${name.split(' ')[0][0]}${name.split(' ')[1][0]}` : `${name[0]}${name.split('@')[1][0]}`,
+        children: name.indexOf(' ') > 0 ? `${name.split(' ')[0][0]}${name.split(' ')[1][0]}` : `${name[0]}`,
     };
 }
 
@@ -55,7 +55,6 @@ export default function PlayerList({
                 sx={{ maxWidth: '20rem', bgcolor: 'background.paper' }}
                 aria-label="players"
             >
-                {/* background: 'linear-gradient(to right bottom, #430089, #82ffa1)'}} */}
                 {players?.map(({ image, id, name }) => (
                         <ListItem disableGutters key={id} role={undefined} sx={{ padding: '0' }}>
                             <ListItemText

@@ -18,12 +18,12 @@ function cleanUser(user: User) {
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const userSession = await getServerSession(req, res, authOptions);
 
-    if (!userSession?.user?.email) {
-        res.status(401).json({ message: "You must be logged in." });
-        return;
-    }
+    // if (!userSession?.user?.email) {
+    //     res.status(401).json({ message: "You must be logged in." });
+    //     return;
+    // }
 
-    const userData = cleanUser(await getUserData(userSession.user.email));
+    const userData = userSession?.user?.email ? cleanUser(await getUserData(userSession.user.email)) : null;
 
     const { query } = req
     const { inviteId } = query

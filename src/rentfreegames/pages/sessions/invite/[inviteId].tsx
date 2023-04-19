@@ -16,6 +16,8 @@ import GameSessionResults from '../../../components/gameSessionResults';
 import SearchFiltersCategory from '../../../components/searchFiltersCategory';
 import SearchFiltersMechanic from '../../../components/searchFiltersMechanic';
 import { useSession } from 'next-auth/react';
+import { Sign } from 'crypto';
+import Signin from '../../../components/signin';
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -115,42 +117,52 @@ export default function SessionDetails() {
             <article>
                 <h1 className={utilStyles.headingXl}>{data.gameSession.title}</h1>
             </article>
-            <section>
-                {
-                    data?.gameSession.users ?
-                        data?.gameSession.users?.some(u => u.id === data.user.id)
-                            ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
-                            : <Button variant="contained" sx={{ width: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }} onClick={joinSession}>Join session</Button>
-                        : <></>
-                }
-            </section>
-            <section>
-                <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
-                    <Grid item xs={12} sm={12} md={12}>
-                        <Search queryValue={queryValue} setQueryValue={onQueryChange} />
-                    </Grid>
-                    <Grid item xs={12} sm={12} md={3}>
-                        <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
-                    </Grid>
-                    <Grid item xs={12} sm={12} md={3}>
-                        <SearchFiltersMechanic mechanics={data.mechanics} mechanic={mechanic} setMechanic={changeMechanic} />
-                    </Grid>
-                    <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
-                        <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} />
-                    </Grid>
-                </Grid>
-            </section>
             {
-                data?.gameSession.users
-                    ? (
+                status === "authenticated" 
+                    ? <section>
                         <section>
-                            <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
+                            {
+                                data?.gameSession.users ?
+                                    data?.gameSession.users?.some(u => u.id === data.user.id)
+                                        ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
+                                        : <Button variant="contained" sx={{ width: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }} onClick={joinSession}>Join session</Button>
+                                    : <></>
+                            }
+                        </section>
+                        <section>
+                            <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+                                <Grid item xs={12} sm={12} md={12}>
+                                    <Search queryValue={queryValue} setQueryValue={onQueryChange} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={3}>
+                                    <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={3}>
+                                    <SearchFiltersMechanic mechanics={data.mechanics} mechanic={mechanic} setMechanic={changeMechanic} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
+                                    <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} />
+                                </Grid>
+                            </Grid>
+                        </section>
+                        {
+                            data?.gameSession.users
+                                ? (
+                                    <section>
+                                        <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
 
-                            <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
+                                        <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
 
-                            <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} title={"Your Games"} />
-                        </section>)
-                    : <></>
+                                        <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} title={"Your Games"} />
+                                    </section>)
+                                : <></>
+                        }
+                    </section>
+                    : <section>
+                        <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
+                        
+                        <Signin />
+                    </section>
             }
         </Layout>
     )

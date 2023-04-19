@@ -2,10 +2,13 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from '../auth/[...nextauth]'
 import { getUserData } from '../../../lib/users'
-import { getSessionData, postSessionData } from '../../../lib/sessions'
+import { getSessionData, getUserSessionsData, postSessionData } from '../../../lib/sessions'
 import { User } from '../../../interfaces'
 
 function cleanUser(user: User) {
+    if (!user) {
+        return user;
+      }
     (user as any).email = null;
     (user as any).sub = null;
     delete user.sub;
@@ -34,14 +37,19 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         return res.json(newSession);
     } else if (req.method === 'GET') {
-        let payload = {} as any;
-        if (req.body) {
-            payload = JSON.parse(req.body);
+        const userSession = await getServerSession(req, res, authOptions);
+
+        if (!userSession?.user?.email) {
+            res.status(401).json({ message: "You must be logged in." });
+            return;
         }
-
-        let gameSessions = await getSessionData(payload?.id?.toString());
-
-        return res.json(gameSessions);
+        const userData = cleanUser(await getUserData(userSession.user.email));
+    
+        let gameSessions = await getUserSessionsData(userData.id as string);    
+    
+        return gameSessions
+            ? res.status(200).json(gameSessions)
+            : res.status(404).json({ message: `User with id: ${userData?.id} not found.` })
     }
 
     res.status(404).json({ message: "Method not found." });

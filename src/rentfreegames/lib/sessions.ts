@@ -135,6 +135,27 @@ export async function getSessionData(id?: string): Promise<Session[]> {
   }
 }
 
+export async function getUserSessionsData(id?: string): Promise<Session[]> {
+  const { database } = await client.databases.createIfNotExists(DATABASE);
+  const { container } = await database.containers.createIfNotExists(CONTAINER);
+
+  if (id) {
+    const { resources } = await container.items
+      .query({
+        query: "SELECT c FROM c \
+        JOIN users in c.users \
+        WHERE users.id = @id",
+        parameters: [{ name: "@id", value: id }]
+      })
+      .fetchAll();
+
+    let gameSessions = [] as Session[];
+    gameSessions = resources.map(r => r.c as Session);
+
+    return gameSessions;
+  }
+}
+
 export async function updateUserGameSessions(user: User): Promise<Session[]> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);

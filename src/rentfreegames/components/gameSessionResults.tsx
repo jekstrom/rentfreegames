@@ -131,7 +131,7 @@ function getUserGames(users: User[], userId: string, query: string, playerCount?
     if (playerCount && playerCount > 1) {
         games = games.filter(g => g.max_players >= playerCount);
     } else {
-        //games = getGamesByPlayerCount(games, users.length)
+        games = getGamesByPlayerCount(games, users.length)
     }
 
     if (mechanic) {

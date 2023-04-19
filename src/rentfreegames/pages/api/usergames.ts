@@ -7,6 +7,9 @@ import { updateUserGameSessions } from '../../lib/sessions'
 import { User } from '../../interfaces'
 
 function cleanUser(user: User) {
+    if (!user) {
+        return user;
+      }
     (user as any).email = null;
     (user as any).sub = null;
     delete user.sub;

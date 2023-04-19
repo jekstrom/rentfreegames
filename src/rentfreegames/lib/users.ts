@@ -3,6 +3,7 @@ import { CosmosClient } from '@azure/cosmos'
 import { Profile } from 'next-auth';
 import { User, Game } from '../interfaces';
 import { JWT } from 'next-auth/jwt';
+import * as crypto from 'crypto';
 
 const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
