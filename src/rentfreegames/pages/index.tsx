@@ -10,6 +10,7 @@ import Layout, { siteTitle } from '../components/layout'
 import SessionBox from '../components/sessionBox'
 import Signin from '../components/signin'
 import utilStyles from '../styles/utils.module.css'
+import UserGamesButton from '../components/userGamesButton'
 
 export default function Home() {
   const router = useRouter();
@@ -36,7 +37,14 @@ export default function Home() {
           <Grid item>
             {
               status === "authenticated" 
-              ? <Button onClick={addGames}><AddCircleIcon sx={{ marginRight: 1, color: "secondary.light" }} /> Add games</Button>
+              ? <Grid container>
+                  <Grid item>
+                    <Button onClick={addGames}><AddCircleIcon sx={{ marginRight: 1, color: "secondary.light" }} /> Add games</Button>
+                  </Grid>
+                  <Grid item>
+                    <UserGamesButton/>
+                  </Grid>
+                </Grid>
               : <></> 
             }
           </Grid>

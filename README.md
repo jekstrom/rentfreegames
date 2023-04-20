@@ -112,8 +112,6 @@ expire game sessions
 
 add a heart for a wishlist collection (inc. amazon affiliate links)
 
-change add game icon to plus
-
 import collection from bgg
 
 passwordless logins/guest users
@@ -121,8 +119,6 @@ passwordless logins/guest users
 profile page
 
 option to make invite link public to all players in a session
-
-filter session games by any number of players 
 
 send cal inv to people
 

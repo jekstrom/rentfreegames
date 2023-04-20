@@ -14,7 +14,7 @@ import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import { Category, Game, Mechanic } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 import CircularProgress from '@mui/material/CircularProgress';
-import { useRouter } from 'next/router'
+import { Router, useRouter } from 'next/router'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -43,14 +43,16 @@ export default function Games({
 }: {
     games: Game[]
 }) {
+    const router = useRouter();
+    const { query } = useRouter();
+    const { myGames } = query;
+
     const [curPage, changePage] = React.useState(1);
     const [category, changeCategory] = React.useState(null);
     const [mechanic, changeMechanic] = React.useState(null);
     const [playerCount, setPlayers] = React.useState("any");
     const [queryValue, setQueryValue] = React.useState('')
-    const [owned, setOwned] = React.useState(false)
-
-    const { query } = useRouter()
+    const [owned, setOwned] = React.useState(myGames === "true")
 
     const { data, error, isLoading } = search(queryValue, curPage, playerCount, category, mechanic, owned);
     if (error) {
@@ -59,7 +61,7 @@ export default function Games({
     }
     if (isLoading) {
         console.log("Loading...");
-        return <Layout><div style={{display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
+        return <Layout><div style={{ display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
         // return <Layout><div style={{display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
     }
     if (!data) {
@@ -85,6 +87,11 @@ export default function Games({
     };
 
     const onOwnedChange = (event) => {
+        router.push({
+            query: { myGames: event.target.checked ? 'true' : 'false' }
+        },
+            undefined, { shallow: true }
+        )
         setOwned(event.target.checked);
     };
 
@@ -100,11 +107,11 @@ export default function Games({
                         <Search queryValue={queryValue} setQueryValue={onQueryChange} />
                     </Grid>
                     {
-                        query && query.inviteId 
-                        ? <Grid item xs={12} sm={12} md={4} style={{ padding: 20, display: "flex", justifyContent: "flex-end" }}>
-                            <Button variant="contained" color="primary" href={`/sessions/invite/${query.inviteId}`}><ArrowBackIcon sx={{ color: "secondary.light", fontSize: 20 }} /> Back to invite</Button>
-                        </Grid>
-                        : <></>
+                        query && query.inviteId
+                            ? <Grid item xs={12} sm={12} md={4} style={{ padding: 20, display: "flex", justifyContent: "flex-end" }}>
+                                <Button variant="contained" color="primary" href={`/sessions/invite/${query.inviteId}`}><ArrowBackIcon sx={{ color: "secondary.light", fontSize: 20 }} /> Back to invite</Button>
+                            </Grid>
+                            : <></>
                     }
                     <Grid item xs={12} sm={12} md={3}>
                         <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
@@ -127,8 +134,8 @@ export default function Games({
                     </Stack>
                 </Grid>
                 <Grid item>
-                    <GameSearchResults 
-                        title="" 
+                    <GameSearchResults
+                        title=""
                         queryValue={queryValue}
                         curPage={curPage}
                         playerCount={playerCount}
