@@ -124,6 +124,3 @@ send cal inv to people
 
 scan barcode to add game
 
-show empty session list on main page
-
-link to owned games on main page

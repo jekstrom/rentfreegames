@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid';
 import { Game } from '../interfaces';
 import { Tooltip, Typography } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle'
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import GroupIcon from '@mui/icons-material/Group';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -55,7 +56,7 @@ function FormRow({ row, numGames, handleToggle }: { row: Game, numGames: number,
                                     <Typography variant="subtitle1" component="div">
                                         {
                                             row.owned 
-                                                ? <AddCircleIcon sx={{ color: 'secondary.light', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} /> 
+                                                ? <RemoveCircleIcon sx={{ color: 'secondary.light', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} /> 
                                                 : <AddCircleOutlineIcon sx={{ color: 'primary.main', p: 0, cursor: "pointer" }} onClick={handleToggle(row.id)} />
                                         }
                                     </Typography>
