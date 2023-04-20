@@ -10,7 +10,7 @@ function getItems(isSearch?: boolean) {
     if (!isSearch) {
         items.push(<MenuItem key="players" value={"players"}>Players</MenuItem>);    
     }
-    items.push(<MenuItem key="players" value={"any"}>Any</MenuItem>);    
+    items.push(<MenuItem key="any" value={"any"}>Any</MenuItem>);    
     for (let i = 2; i < 10; i++) {
         items.push(<MenuItem key={i.toString()} value={i.toString()}>{i}</MenuItem>);
     }

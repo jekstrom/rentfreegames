@@ -45,6 +45,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return;
         }
 
+        if (parseFloat(payload.rating) < 0 || parseFloat(payload.rating) > 5) {
+            res.status(400).json({ message: "Rating out of bounds." });
+            return;
+        }
+
         const gameSessions = await getSessionData(id as string);
         const gameSession = gameSessions[0];
 

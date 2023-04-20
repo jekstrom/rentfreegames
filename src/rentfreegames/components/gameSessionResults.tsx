@@ -212,7 +212,6 @@ export default function GameSessionResults({
 }) {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
-    const [ratings, setRatings] = React.useState(true)
 
     const { data, error, isLoading, isValidating, url } = getSession(id);
     const { mutate } = useSWRConfig()
@@ -231,8 +230,23 @@ export default function GameSessionResults({
     }
 
     const handleRating = async (sessionId: string, gameId: string, rating: number) => {
-        if (gameId) {
-            const response = await postData(`/api/sessions/${sessionId}`, { gameId, rating });
+        if (sessionId && gameId && rating > 0) {
+            const currentRatings = data?.gameSession?.userGameRatings ?? [];
+            const newRating = { gameId: gameId, userId: data.sessionUser.id, rating: rating };
+            if (currentRatings.length === 0 || !currentRatings.some(r => r.gameId === gameId && r.userId === data.sessionUser.id)) {
+                currentRatings.push(newRating);
+            }
+
+            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId ===  data.sessionUser.id ? { ...r, rating: rating } : { ...r});
+
+            const gameSession = data.gameSession;
+            gameSession.userGameRatings = newRatings;
+            await postData(`/api/sessions/${sessionId}`, { gameId, rating }).then(async () => {
+                await mutate(url, {
+                    ...data,
+                    gameSession
+                }, { revalidate: true });
+            });
         }
     };
 
@@ -245,7 +259,7 @@ export default function GameSessionResults({
                 <Grid container item spacing={3}>
                     {
                         getUserGames(data.gameSession.users, data.sessionUser.id, query, playerCount, mechanic, category, owned, data.gameSession.userGameRatings, ratingSort).map((row) => (
-                            <FormRow sessionId={data.gameSession.id} row={row} key={row.id} />
+                            <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
                         ))
                     }
                 </Grid>
