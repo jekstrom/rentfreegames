@@ -65,7 +65,7 @@ export default function UserGameSessions() {
                                                     <Link href={`/sessions/${session.id}${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`} sx={{ color: "secondary.light" }}>{session.title}</Link>
                                                 </Typography>
                                                 <Typography variant="caption" component="p" sx={{ color: "primary.light" }}>
-                                                    <Tooltip title={session.created.toString()} placement="top">
+                                                    <Tooltip title={new Date(session.created).toLocaleString()} placement="top">
                                                         <AccessTimeIcon sx={{ color: "primary.main", fontSize: 16 }} />
                                                     </Tooltip>
                                                     &nbsp;Started {new Date(session.created).toLocaleDateString()}

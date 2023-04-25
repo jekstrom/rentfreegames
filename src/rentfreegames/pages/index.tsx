@@ -34,11 +34,15 @@ export default function Home() {
           columns={{ xs: 12, sm: 12, md: 12 }}
           spacing={10}>
           <Grid item>
-            <SessionBox />
+          {
+              status === "authenticated" || guestUser?.id
+              ? <SessionBox />
+              : <></>
+          }
           </Grid>
           <Grid item>
             {
-              guestUser?.id
+              status === "authenticated" || guestUser?.id
               ? <Grid container>
                   <Grid item>
                     <Button onClick={addGamesRoute}><AddCircleIcon sx={{ marginRight: 1, color: "secondary.light" }} /> Add games</Button>
@@ -51,7 +55,12 @@ export default function Home() {
             }
           </Grid>
           <Grid item sx={{ width: "75%" }}>
-            <UserGameSessions />
+            {
+              status === "authenticated" || guestUser?.id
+              ? <UserGameSessions />
+              : <></>
+            }
+            
           </Grid>
           <Grid item>
             <Signin />
