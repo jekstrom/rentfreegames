@@ -11,16 +11,20 @@ import SearchFiltersCategory from '../../components/searchFiltersCategory'
 import SearchFiltersMechanic from '../../components/searchFiltersMechanic'
 import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
-import { Category, Game, Mechanic } from '../../interfaces'
+import { Category, Game, GuestUser, Mechanic } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 import CircularProgress from '@mui/material/CircularProgress';
 import { Router, useRouter } from 'next/router'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useGuestUserContext } from '../../components/GuestUserContext'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export function search(queryValue: string, curPage: number, playerCount: string, category: any, mechanic: any, owned: boolean) {
-    const url = `/api/search?q=${queryValue ?? ""}&p=${curPage - 1}&players=${playerCount}&cat=${category?.id ?? ""}&mec=${mechanic?.id ?? ""}&owned=${owned}`
+export function search(queryValue: string, curPage: number, playerCount: string, category: any, mechanic: any, owned: boolean, guestUser: GuestUser) {
+    let url = `/api/search?q=${queryValue ?? ""}&p=${curPage - 1}&players=${playerCount}&cat=${category?.id ?? ""}&mec=${mechanic?.id ?? ""}&owned=${owned}`
+    if (url && guestUser?.id) {
+        url += `&guestId=${guestUser.id}`
+    }
     const { data, error, isLoading } = useSWR<
         {
             games: Game[],
@@ -29,6 +33,15 @@ export function search(queryValue: string, curPage: number, playerCount: string,
             totalPages: number,
             title: string
         }>(url, fetcher);
+
+    // if (guestUser && guestUser.games.length > 0) {
+    //     data?.games.forEach(game => {
+    //         game.owned = guestUser.games.some(g => g === game.id);
+    //     });
+    //     if (data && owned) {
+    //         data.games = data?.games?.filter(g => g.owned) ?? [];
+    //     }
+    // }
 
     return {
         data,
@@ -46,6 +59,7 @@ export default function Games({
     const router = useRouter();
     const { query } = useRouter();
     const { myGames } = query;
+    const guestUser = useGuestUserContext();
 
     const [curPage, changePage] = React.useState(1);
     const [category, changeCategory] = React.useState(null);
@@ -54,7 +68,7 @@ export default function Games({
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(myGames === "true")
 
-    const { data, error, isLoading } = search(queryValue, curPage, playerCount, category, mechanic, owned);
+    const { data, error, isLoading } = search(queryValue, curPage, playerCount, category, mechanic, owned, guestUser);
     if (error) {
         console.log("Failed to load");
         return <Layout><div>Failed to load</div></Layout>
@@ -62,10 +76,8 @@ export default function Games({
     if (isLoading) {
         console.log("Loading...");
         return <Layout><div style={{ display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
-        // return <Layout><div style={{display: "flex", justifyContent: "center" }}><CircularProgress /></div></Layout>
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 

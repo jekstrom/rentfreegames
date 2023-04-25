@@ -1,21 +1,22 @@
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CasinoIcon from '@mui/icons-material/Casino';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
 import { Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import { useSession } from 'next-auth/react';
 import * as React from 'react';
-import useSWR from 'swr'
-import { ResponseError, Session } from '../interfaces'
-import Link from '@mui/material/Link';
-import CasinoIcon from '@mui/icons-material/Casino';
+import useSWR from 'swr';
+import { ResponseError, Session } from '../interfaces';
+import { useGuestUserContext } from './GuestUserContext'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export function getUserGameSessions() {
-    const url = "/api/sessions"
+export function getUserGameSessions(guestId?: string) {
+    const url = `/api/sessions${guestId ? `?guestId=${guestId}` : ""}`;
     const { data, error, isLoading, isValidating } = useSWR<
         Session[],
         ResponseError
@@ -33,8 +34,9 @@ export function getUserGameSessions() {
 export default function UserGameSessions() {
     const { data: userSession, status } = useSession();
     const userEmail = userSession?.user.email;
+    const guestUser = useGuestUserContext();
 
-    const { data, error, isLoading, isValidating, url } = getUserGameSessions();
+    const { data, error, isLoading, isValidating, url } = getUserGameSessions(guestUser?.id);
 
     if (error) {
         console.log("Failed to load sessions");
@@ -45,14 +47,13 @@ export default function UserGameSessions() {
         return <div style={{ display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div>
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 
     return (
         <div>
             {
-                status === "authenticated" && data && data.length > 0
+                (status === "authenticated" || guestUser?.id) && data && data.length > 0
                     ? <section>
                         <Grid container sx={{ display: 'flex', alignItems: 'center' }} spacing={{ xs: 1, md: 1 }} columns={{ xs: 12, sm: 12, md: 12 }}>
                             {data.map((session) => (
@@ -61,7 +62,7 @@ export default function UserGameSessions() {
                                         <Grid container>
                                             <Grid item xs={12} sm={12} md={12}>
                                                 <Typography variant="h5" component="div">
-                                                    <Link href={`/sessions/${session.id}`} sx={{ color: "secondary.light" }}>{session.title}</Link>
+                                                    <Link href={`/sessions/${session.id}${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`} sx={{ color: "secondary.light" }}>{session.title}</Link>
                                                 </Typography>
                                                 <Typography variant="caption" component="p" sx={{ color: "primary.light" }}>
                                                     <Tooltip title={session.created.toString()} placement="top">

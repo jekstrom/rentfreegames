@@ -10,7 +10,7 @@ import Layout from '../../../components/layout';
 import PlayerList from '../../../components/playersList';
 import Search from '../../../components/search';
 import SearchFiltersPlayers from '../../../components/searchFiltersPlayers';
-import { Category, Mechanic, ResponseError, Session, User } from '../../../interfaces';
+import { Category, GuestUser, Mechanic, ResponseError, Session, User } from '../../../interfaces';
 import utilStyles from '../../../styles/utils.module.css';
 import GameSessionResults from '../../../components/gameSessionResults';
 import SearchFiltersCategory from '../../../components/searchFiltersCategory';
@@ -18,6 +18,7 @@ import SearchFiltersMechanic from '../../../components/searchFiltersMechanic';
 import { useSession } from 'next-auth/react';
 import { Sign } from 'crypto';
 import Signin from '../../../components/signin';
+import { useGuestUserContext } from '../../../components/GuestUserContext';
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -32,11 +33,14 @@ const postData = async (url: string, data: any) => {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export const getInviteSession = (inviteId: string) => {
-    const url = (inviteId ? `/api/sessions/invite/${inviteId}` : null);
+export const getInviteSession = (inviteId: string, guestUser?: GuestUser) => {
+    let url = (inviteId ? `/api/sessions/invite/${inviteId}` : null);
+    if (url && guestUser?.id) {
+        url += `?guestId=${guestUser.id}`;
+    }
 
     const { data, error, isLoading, isValidating } = useSWR<
-        { gameSession: Session, user: User, categories: Category[], mechanics: Mechanic[] },
+        { gameSession: Session, user: User | GuestUser, categories: Category[], mechanics: Mechanic[] },
         ResponseError
     >(() => url, fetcher)
 
@@ -52,6 +56,7 @@ export const getInviteSession = (inviteId: string) => {
 export default function SessionDetails() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const guestUser = useGuestUserContext();
 
     const { query } = useRouter()
 
@@ -61,7 +66,7 @@ export default function SessionDetails() {
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
 
-    const { data, error, isLoading, isValidating } = getInviteSession(query?.inviteId as string)
+    const { data, error, isLoading, isValidating } = getInviteSession(query?.inviteId as string, guestUser)
 
     if (error) {
         console.log("Failed to load session");
@@ -72,16 +77,17 @@ export default function SessionDetails() {
         return <Layout><div style={{display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 
     const joinSession = async () => {
-        console.log("Joining session");
         if (status === "authenticated") {
             const response = await postData(`/api/sessions/invite/${query.inviteId}/users`, { sessionId: data.gameSession.id, inviteId: data.gameSession.inviteId });
-            console.log(response);
             router.push(`/sessions/${response.id}`)
+        } else if (guestUser) {
+            /// TODO: REFACTOR
+            const response = await postData(`/api/sessions/invite/${query.inviteId}/guestUsers`, { sessionId: data.gameSession.id, inviteId: data.gameSession.inviteId, guestId: guestUser.id });
+            router.push(`/sessions/${response.id}?guestId=${guestUser.id}`)
         }
     };
 
@@ -98,7 +104,6 @@ export default function SessionDetails() {
     };
 
     const onChangeCategory = (event: any, newValue: Category | null) => {
-        console.log("onChangeCategory", newValue);
         changeCategory(newValue);
     };
 
@@ -118,38 +123,40 @@ export default function SessionDetails() {
                 <h1 className={utilStyles.headingXl}>{data.gameSession.title}</h1>
             </article>
             {
-                status === "authenticated" 
+                (status === "authenticated" || guestUser?.id)
                     ? <section>
-                        <section>
-                            {
-                                data?.gameSession.users ?
-                                    data?.gameSession.users?.some(u => u.id === data.user.id)
-                                        ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
-                                        : <Button variant="contained" sx={{ width: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }} onClick={joinSession}>Join session</Button>
-                                    : <></>
-                            }
-                        </section>
-                        <section>
-                            <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
-                                <Grid item xs={12} sm={12} md={12}>
-                                    <Search queryValue={queryValue} setQueryValue={onQueryChange} />
-                                </Grid>
-                                <Grid item xs={12} sm={12} md={3}>
-                                    <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
-                                </Grid>
-                                <Grid item xs={12} sm={12} md={3}>
-                                    <SearchFiltersMechanic mechanics={data.mechanics} mechanic={mechanic} setMechanic={changeMechanic} />
-                                </Grid>
-                                <Grid item xs={12} sm={12} md={3} style={{ padding: "10px" }}>
-                                    <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} />
+                        <Grid container columns={{ xs: 12, sm: 12, md: 12 }}>
+                            <Grid item xs={12} sx={{ width: "100%" }}>
+                                {
+                                    data?.gameSession.users ?
+                                        data?.gameSession.users?.some(u => u.id === data.user.id)
+                                            ? <Button variant="outlined" onClick={leaveSession}>Leave session</Button>
+                                            : <Button variant="contained" sx={{ width: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText', p: 2 }} onClick={joinSession}>Join session</Button>
+                                        : <></>
+                                }
+                            </Grid>
+                            <Grid item xs={12} sx={{ width: "100%" }}>
+                                <Grid container columns={{ xs: 4, sm: 8, md: 12 }}>
+                                    <Grid item xs={12} sm={12} md={12}>
+                                        <Search queryValue={queryValue} setQueryValue={onQueryChange} />
+                                    </Grid>
+                                    <Grid item xs={12} sm={12} md={3}>
+                                        <SearchFiltersCategory categories={data.categories} category={category} setCategory={onChangeCategory} />
+                                    </Grid>
+                                    <Grid item xs={12} sm={12} md={3}>
+                                        <SearchFiltersMechanic mechanics={data.mechanics} mechanic={mechanic} setMechanic={changeMechanic} />
+                                    </Grid>
+                                    <Grid item xs={12} sm={12} md={3} style={{ paddingTop: 8, paddingLeft: 1, paddingRight: 1 }}>
+                                        <SearchFiltersPlayers player={playerCount} setPlayers={handleChangePlayers} />
+                                    </Grid>
                                 </Grid>
                             </Grid>
-                        </section>
+                        </Grid>
                         {
                             data?.gameSession.users
                                 ? (
                                     <section>
-                                        <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
+                                        <PlayerList players={data.gameSession.users} user={data?.user ?? guestUser} host={data.gameSession.createdBy} />
 
                                         <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
 
@@ -160,7 +167,11 @@ export default function SessionDetails() {
                     </section>
                     : <section>
                         <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
-                        
+                        <section>
+                            <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
+
+                            <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} sessionPlayerCount={data?.gameSession?.users?.length} title={"Your Games"} />
+                        </section>
                         <Signin />
                     </section>
             }

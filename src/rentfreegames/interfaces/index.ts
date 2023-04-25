@@ -153,7 +153,17 @@ export interface User {
     image: string,
     name: string,
     sub: string
-    games: Game[]
+    games: Game[],
+    isGuest?: boolean
+}
+
+export interface GuestUser {
+    name: string,
+    games: string[]
+    id?: string,
+    image?: string,
+    sub?: string,
+    isGuest: boolean
 }
 
 export interface Session {
@@ -161,8 +171,8 @@ export interface Session {
     title: string,
     created: Date,
     inviteId: string,
-    users: User[],
-    createdBy: User,
+    users: (User | GuestUser)[],
+    createdBy: User | GuestUser,
     games?: Game[],
     userGameRatings?: GameRating[]
 }

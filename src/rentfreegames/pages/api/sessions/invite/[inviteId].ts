@@ -2,9 +2,9 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from '../../auth/[...nextauth]'
 import { getSessionDataByInviteId } from '../../../../lib/sessions'
-import { getUserData } from '../../../../lib/users'
-import { getMechanics, getCategories } from '../../../../lib/search'
-import { User } from '../../../../interfaces'
+import { getGuestUserData, getUserData } from '../../../../lib/users'
+import { getMechanics, getCategories, buildSearchIdsQuery, searchGamesByIds } from '../../../../lib/search'
+import { User, GuestUser } from '../../../../interfaces'
 
 function cleanUser(user: User) {
     (user as any).email = null;
@@ -14,21 +14,21 @@ function cleanUser(user: User) {
     return user;
 }
 
-
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const userSession = await getServerSession(req, res, authOptions);
 
-    // if (!userSession?.user?.email) {
-    //     res.status(401).json({ message: "You must be logged in." });
-    //     return;
-    // }
-
-    const userData = userSession?.user?.email ? cleanUser(await getUserData(userSession.user.email)) : null;
+    let userData = null as User | GuestUser;
+    userData = userSession?.user?.email ? cleanUser(await getUserData(userSession.user.email)) : null;
 
     const { query } = req
     const { inviteId } = query
+    const { guestId } = query
 
     let gameSession = await getSessionDataByInviteId(inviteId as string);
+
+    if (guestId) {
+        userData = await getGuestUserData(guestId as string);
+    }
 
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const categories = await getCategories(today);

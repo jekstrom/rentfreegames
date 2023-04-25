@@ -12,14 +12,17 @@ import React from 'react'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
 import { Session } from '../interfaces'
+import { useGuestUserContext } from '../components/GuestUserContext'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export default function Games() {
-    const { data, error, isLoading } = useSWR<Session[]>('/api/sessions', fetcher);
-
+export default function SessionList() {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
+    const guestUser = useGuestUserContext();
+
+    const { data, error, isLoading } = useSWR<Session[]>(`/api/sessions${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`, fetcher);
+
 
     if (error) {
         console.log("Failed to load");
@@ -30,7 +33,6 @@ export default function Games() {
         return <div>Loading...</div>
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 

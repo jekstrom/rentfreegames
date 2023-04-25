@@ -5,13 +5,13 @@ resource "azurerm_resource_group" "rentfreegames" {
 
 
 # Create Container App for RFG container
-resource "azurerm_log_analytics_workspace" "logs_workspace" {
-  name                = "rfg-logs-workspace"
-  location            = azurerm_resource_group.rentfreegames.location
-  resource_group_name = azurerm_resource_group.rentfreegames.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
+# resource "azurerm_log_analytics_workspace" "logs_workspace" {
+#   name                = "rfg-logs-workspace"
+#   location            = azurerm_resource_group.rentfreegames.location
+#   resource_group_name = azurerm_resource_group.rentfreegames.name
+#   sku                 = "PerGB2018"
+#   retention_in_days   = 30
+# }
 
 # resource "azurerm_container_group" "rfg" {
 #   name                = "rfg-continst"
@@ -39,41 +39,41 @@ resource "azurerm_log_analytics_workspace" "logs_workspace" {
 #   }
 # }
 
-resource "azurerm_container_app_environment" "rfg" {
-  name                       = "rfg-container-environment"
-  location            = azurerm_resource_group.rentfreegames.location
-  resource_group_name = azurerm_resource_group.rentfreegames.name
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs_workspace.id
-}
+# resource "azurerm_container_app_environment" "rfg" {
+#   name                       = "rfg-container-environment"
+#   location            = azurerm_resource_group.rentfreegames.location
+#   resource_group_name = azurerm_resource_group.rentfreegames.name
+#   log_analytics_workspace_id = azurerm_log_analytics_workspace.logs_workspace.id
+# }
 
-resource "azurerm_container_app" "rfg" {
-  name                         = "rfg-app"
-  container_app_environment_id = azurerm_container_app_environment.rfg.id
-  resource_group_name = azurerm_resource_group.rentfreegames.name
-  revision_mode                = "Single"
+# resource "azurerm_container_app" "rfg" {
+#   name                         = "rfg-app"
+#   container_app_environment_id = azurerm_container_app_environment.rfg.id
+#   resource_group_name = azurerm_resource_group.rentfreegames.name
+#   revision_mode                = "Single"
 
-  template {
-    container {
-      name   = "rentfreegamesapp"
-      image  = "jekstrom/rfg:latest"
-      cpu    = 0.25
-      memory = "0.5Gi"
-    }
-  }
+#   template {
+#     container {
+#       name   = "rentfreegamesapp"
+#       image  = "jekstrom/rfg:latest"
+#       cpu    = 0.25
+#       memory = "0.5Gi"
+#     }
+#   }
 
-  ingress {
-    target_port = 3000
-    traffic_weight {
-      percentage = 100
-    }
-  }
+#   ingress {
+#     target_port = 3000
+#     traffic_weight {
+#       percentage = 100
+#     }
+#   }
 
-  lifecycle {
-    ignore_changes = [
-      ingress
-    ]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [
+#       ingress
+#     ]
+#   }
+# }
 
 # resource "azurerm_cdn_frontdoor_profile" "rfg" {
 #   name                = "rfg-frontdoor"

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { CosmosClient } from '@azure/cosmos'
 import { Profile } from 'next-auth';
-import { User, Game } from '../interfaces';
+import { User, Game, GuestUser } from '../interfaces';
 import { JWT } from 'next-auth/jwt';
 import * as crypto from 'crypto';
 
@@ -23,6 +23,20 @@ export async function getUserData(email: string): Promise<User> {
     return resources.find((u) => u.email === email) as User;
 }
 
+export async function getGuestUserData(id: string): Promise<User> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+
+    const { resources } = await container.items
+        .query({
+            query: "SELECT * from u WHERE u.id = @id",
+            parameters: [{ name: "@id", value: id }]
+        })
+        .fetchAll();
+
+    return resources.find((u) => u.id === id) as User;
+}
+
 export async function postUserData(profile: Profile): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
@@ -35,12 +49,13 @@ export async function postUserData(profile: Profile): Promise<User> {
                 image: profile.image,
                 name: profile.name,
                 sub: profile.sub,
+                isGuest: true,
                 games: []
             }
         );
 
 
-        if (result.statusCode != 200) {
+        if (result.statusCode >= 400) {
             console.log(result.statusCode);
             console.log(result.substatus);
             return null;
@@ -51,6 +66,44 @@ export async function postUserData(profile: Profile): Promise<User> {
             image: result.resource.image,
             name: result.resource.name,
             sub: result.resource.sub,
+            games: []
+        };
+    }
+    catch (ex) {
+        console.log("Exception postUserData: ", ex);
+    }
+}
+
+export async function postGuestUserData(guestUser: GuestUser): Promise<GuestUser> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+
+    try {
+        const result = await container.items.create(
+            {
+                id: crypto.randomUUID(),
+                email: '',
+                image: '',
+                name: guestUser.name,
+                sub: '',
+                games: [],
+                isGuest: true
+            }
+        );
+
+
+        if (result.statusCode >= 400) {
+            console.log(result.statusCode);
+            console.log(result.substatus);
+            return null;
+        }
+
+        return {
+            id: result.resource.id,
+            image: result.resource.image,
+            name: result.resource.name,
+            sub: result.resource.sub,
+            isGuest: true,
             games: []
         };
     }
@@ -76,7 +129,7 @@ export async function postJWTUserData(profile: JWT): Promise<User> {
         );
 
 
-        if (result.statusCode != 200) {
+        if (result.statusCode >= 400) {
             console.log(result.statusCode);
             console.log(result.substatus);
             return null;
@@ -123,12 +176,13 @@ export async function addGame(id: string, game: Game): Promise<User> {
                 image: user.image,
                 name: user.name,
                 sub: user.sub,
-                games: user.games
+                games: user.games,
+                isGuest: user.isGuest
             }
         );
 
 
-        if (result.statusCode != 200) {
+        if (result.statusCode >= 400) {
             console.log(result.statusCode);
             console.log(result.substatus);
             return null;
@@ -169,12 +223,13 @@ export async function removeGame(id: string, gameId: string): Promise<User> {
                 image: user.image,
                 name: user.name,
                 sub: user.sub,
-                games: user.games
+                games: user.games,
+                isGuest: user.isGuest
             }
         );
 
 
-        if (result.statusCode != 200) {
+        if (result.statusCode >= 400) {
             console.log(result.statusCode);
             console.log(result.substatus);
             return null;

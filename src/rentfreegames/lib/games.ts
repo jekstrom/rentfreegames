@@ -11,17 +11,21 @@ interface ApiResponse {
 const createCacheClient = async () => {
   try {
     const cache = redis.createClient({
-        url: `rediss://${process.env.REDIS_URL}:6380`,
-        password: process.env.REDIS_PASSWORD
+      url: `rediss://${process.env.REDIS_URL}:6380`,
+      password: process.env.REDIS_PASSWORD
     });
     await cache.connect();
-    cache.on("error", function(error) {
+    cache.on("error", function (error) {
       console.error(error);
-   });
+    });
     return cache;
-} catch (error) {
+  } catch (error) {
     console.log(error);
+  }
 }
+
+const buildFieldsQueryString = () => {
+  return "fields=id,name,description,images,url,min_players,max_players,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics"
 }
 
 export async function getSortedGamesData(id?: string | string[]): Promise<Game[]> {
@@ -33,14 +37,14 @@ export async function getSortedGamesData(id?: string | string[]): Promise<Game[]
 
 
     const cacheResponse = await cache.get(cacheKey);
-    
+
     if (cacheResponse) {
       games = JSON.parse(cacheResponse) as Game[];
     }
 
     if (!games || games.length === 0) {
       console.log("Fetching from API...");
-      const response = await fetch(`${endpoint}?client_id=${client_id}&limit=30&ids=${id ?? ""}&order_by=rank`);
+      const response = await fetch(`${endpoint}?client_id=${client_id}&limit=30&ids=${id ?? ""}&order_by=rank&${buildFieldsQueryString()}`);
       const apiResponse = await response.json() as ApiResponse;
       games = apiResponse.games;
 
@@ -64,7 +68,7 @@ export async function getGamesData(id: string | string[]): Promise<Game[]> {
 
 
     const cacheResponse = await cache.get(cacheKey);
-    
+
     if (cacheResponse) {
       games = JSON.parse(cacheResponse) as Game[];
     }

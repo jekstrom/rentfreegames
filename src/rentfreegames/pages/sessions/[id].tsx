@@ -17,11 +17,15 @@ import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchSortRating from '../../components/searchRatingSort'
 import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
+import { useGuestUserContext } from '../../components/GuestUserContext';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export function getSession(id: string) {
-    const url = (id ? `/api/sessions/${id}` : null)
+export function getSession(id: string, guestId?: string) {
+    let url = (id ? `/api/sessions/${id}` : null)
+    if (url && guestId) {
+        url += `?guestId=${guestId}`
+    }
     const { data, error, isLoading, isValidating } = useSWR<
         { gameSession: Session, sessionUser: User, categories: Category[], mechanics: Mechanic[] },
         ResponseError
@@ -43,9 +47,10 @@ export default function SessionDetails() {
     const [queryValue, setQueryValue] = React.useState('')
     const [owned, setOwned] = React.useState(false)
     const [ratingSort, setRating] = React.useState("none")
+    const guestUser = useGuestUserContext();
 
     const { query } = useRouter()
-    const { data, error, isLoading, isValidating } = getSession(query?.id as string)
+    const { data, error, isLoading, isValidating } = getSession(query?.id as string, guestUser?.id)
 
     if (error) {
         console.log("Failed to load session");
@@ -56,7 +61,6 @@ export default function SessionDetails() {
         return <Layout><div style={{display: "flex", justifyContent: "center" }}><img src="/images/Rentfreeanim.gif" /></div></Layout>
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 
@@ -82,7 +86,7 @@ export default function SessionDetails() {
     };
 
     const copy = () => {
-        navigator.clipboard.writeText(new URL(`sessions/invite/${data.gameSession.inviteId}`, window.location.origin).href);
+        navigator.clipboard.writeText(new URL(`sessions/invite/${data?.gameSession?.inviteId}`, window.location.origin).href);
     }
 
     return (
@@ -95,7 +99,7 @@ export default function SessionDetails() {
             </article>
 
             {
-                data.gameSession.createdBy.id === data.sessionUser.id
+                data?.gameSession?.createdBy?.id === data?.sessionUser?.id
                     ? <section className={utilStyles.headingMd}>
                         <Typography align="justify" gutterBottom>
                             Share this invite code with your friends to invite them to this session
@@ -144,7 +148,7 @@ export default function SessionDetails() {
                 </Grid>
             </section>
 
-            <PlayerList players={data.gameSession.users} user={data.sessionUser} host={data.gameSession.createdBy} />
+            <PlayerList players={data?.gameSession?.users} user={data.sessionUser} host={data?.gameSession?.createdBy} />
 
             <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Games"} />
         </Layout>

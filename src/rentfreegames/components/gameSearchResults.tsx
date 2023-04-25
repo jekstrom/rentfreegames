@@ -1,11 +1,9 @@
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import { Game } from '../interfaces';
 import { Tooltip, Typography } from '@mui/material';
-import AddCircleIcon from '@mui/icons-material/AddCircle'
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import GroupIcon from '@mui/icons-material/Group';
@@ -14,25 +12,11 @@ import BalanceIcon from '@mui/icons-material/Balance';
 import { useSession } from 'next-auth/react'
 import { search } from '../pages/games';
 import { useSWRConfig } from "swr"
-
-const Img = styled('img')({
-    margin: 'auto',
-    display: 'block',
-    maxWidth: '100%',
-    maxHeight: '100%',
-});
-
-const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-    ...theme.typography.body2,
-    padding: theme.spacing(1),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-}));
+import { useGuestUserContext, useSetGuestUserContext } from '../components/GuestUserContext'
 
 function FormRow({ row, numGames, handleToggle }: { row: Game, numGames: number, handleToggle: any }) {
     return (
-        <React.Fragment>
+        <React.Fragment key={row.id}>
             <Grid item xs={12} sm={12} md={numGames < 3 ? 12 : 4}>
                 <Paper elevation={2} sx={{ height: "100%" }}>
                     <Grid item xs={12} sm container padding={1} >
@@ -78,7 +62,6 @@ function FormRow({ row, numGames, handleToggle }: { row: Game, numGames: number,
                                 </Typography>
                             </Grid>
                         </Grid>
-
                     </Grid>
                 </Paper>
             </Grid>
@@ -127,8 +110,10 @@ export default function GameSearchResults({
 }) {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
+    const guestUser = useGuestUserContext();
+    const setUser = useSetGuestUserContext();
 
-    const { data, error, isLoading, url } = search(queryValue, curPage, playerCount, category, mechanic, owned);
+    const { data, error, isLoading, url } = search(queryValue, curPage, playerCount, category, mechanic, owned, guestUser);
     const { mutate } = useSWRConfig()
 
     if (error) {
@@ -140,7 +125,6 @@ export default function GameSearchResults({
         return <img src="../public/Rentfreeanim.gif" />
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 
@@ -150,21 +134,25 @@ export default function GameSearchResults({
 
         if (!selectedGame?.owned) {
             selectedGame.owned = true;
-            if (status === "authenticated") {
-                await mutate(url, {
-                    ...data,
-                    games: currentGames.map(g => g.id === id ? { ...g, owned: true } : { ...g})
-                }, { revalidate: false });
-                const response = await postData("/api/usergames", { id });
+            await mutate(url, {
+                ...data,
+                games: currentGames.map(g => g.id === id ? { ...g, owned: true } : { ...g})
+            }, { revalidate: false });
+            const response = await postData("/api/usergames", { id, guestId: guestUser?.id });
+
+            if (guestUser && guestUser?.id) {
+                setUser({...guestUser, games: [...guestUser?.games ?? [], id]});
             }
         } else {
             selectedGame.owned = false;
-            if (status === "authenticated") {
-                await mutate(url, {
-                    ...data,
-                    games: currentGames.map(g => g.id === id ? { ...g, owned: false } : { ...g})
-                }, { revalidate: false });
-                const response = await deleteData("/api/usergames", { id });
+            await mutate(url, {
+                ...data,
+                games: currentGames.map(g => g.id === id ? { ...g, owned: false } : { ...g})
+            }, { revalidate: false });
+            const response = await deleteData("/api/usergames", { id, guestId: guestUser?.id });
+
+            if (guestUser && guestUser?.id) {
+                setUser({...guestUser, games: [...guestUser?.games?.filter(g => g !== id) ?? []]});
             }
         }
     };
@@ -173,12 +161,13 @@ export default function GameSearchResults({
              <Typography variant="h4" component="div">
                 {title}
             </Typography>
-            <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                <Grid container item spacing={3}>
+            <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} key="gamesListContainer">
+                <Grid container item spacing={3} key="gamesList">
                     {
-                        data.games.map((row) => (
+                        data?.games?.length ? data?.games?.map((row) => (
                             <FormRow row={row} numGames={data.games.length} handleToggle={handleToggle} key={row.id} />
                         ))
+                        : <></>
                     }
                 </Grid>
             </Grid>

@@ -4,7 +4,7 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import * as React from 'react';
-import { User } from '../interfaces';
+import { User, GuestUser } from '../interfaces';
 import utilStyles from '../styles/utils.module.css';
 import { theme } from '../styles/theme';
 import AvatarGroup from '@mui/material/AvatarGroup';
@@ -43,9 +43,9 @@ export default function PlayerList({
     user,
     host
 }: {
-    players: User[],
-    user: User,
-    host: User
+    players: (User | GuestUser)[],
+    user: User | GuestUser,
+    host: User | GuestUser
 }) {
     const [playerState, setPlayerState] = React.useState(true)
 
@@ -54,9 +54,9 @@ export default function PlayerList({
             <article>
                 <h2 className={utilStyles.headingMd}>
                     {
-                        players?.length === 1 
+                        players?.length === 1 && players[0].id === user.id
                         ? "Invite your friends to join the game!"
-                        : `${players?.length} Players`
+                        : `${players?.length} ${players?.length === 1 ? "Player" : "Players"}`
                     }
                 </h2>
                 {

@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { Typography } from '@mui/material';
 import { useRouter } from 'next/router';
+import { useGuestUserContext } from './GuestUserContext';
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -23,19 +24,20 @@ export default function SessionModal() {
     const { data: session, status } = useSession();
     const [title, setTitle] = React.useState("");
     const router = useRouter();
+    const guestUser = useGuestUserContext();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         const inviteRegex = /invite\/inv--.*/
         if (title && title.startsWith("inv--")){
-            router.push(`/sessions/invite/${title}`)
+            router.push(`/sessions/invite/${title}${guestUser?.id ? `?guestId=${guestUser?.id}` : ""}`)
         } else if(title && title.match(inviteRegex)) {
             // Get the invite code from the URL
             const inviteCode = title.split("invite/")[1];
-            router.push(`/sessions/invite/${inviteCode}`)
-        } else if (title && status === "authenticated") {
-            const response = await postData("/api/sessions", { title });
-            router.push(`/sessions/${response.id}`)
+            router.push(`/sessions/invite/${inviteCode}${guestUser?.id ? `?guestId=${guestUser?.id}` : ""}`)
+        } else if (title && (status === "authenticated" || guestUser?.id)) {
+            const response = await postData(`/api/sessions${guestUser?.id ? `?guestId=${guestUser?.id}` : ""}`, { title })
+            .then((data) => router.push(`/sessions/${data.id}${guestUser?.id ? `?guestId=${guestUser?.id}` : ""}`));
         }
     };
 

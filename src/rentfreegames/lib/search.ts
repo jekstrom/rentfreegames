@@ -50,8 +50,6 @@ export const getCategories = async (today: string) => {
             categories = apiResponse.categories;
         }
 
-        console.log("Categories: ", categories.length);
-
         if (!categories || categories.length === 0) {
             console.log("Fetching categories from API...");
             const response = await fetch(`${gameEndpoint}/categories?client_id=${client_id}`);
@@ -80,8 +78,6 @@ export const getMechanics = async (today: string) => {
             mechanics = apiResponse.mechanics;
         }
 
-        console.log("Mechanics: ", mechanics.length);
-
         if (!mechanics || mechanics.length === 0) {
             console.log("Fetching mechanics from API...");
             const response = await fetch(`${gameEndpoint}/mechanics?client_id=${client_id}`);
@@ -99,11 +95,12 @@ export const getMechanics = async (today: string) => {
     return mechanics;
 }
 
+const buildFieldsQueryString = () => {
+    return "fields=id,name,description,images,url,min_players,max_players,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics"
+}
+
 export const buildSearchQuery = (query: string, page: number, pageLength: number, category: string, mechanic: string, players?: string) => {
-    let searchQuery = `${endpoint}?client_id=${client_id}&limit=${pageLength}&skip=${page * pageLength ?? 0}`;
-    console.log("Page: ", page);
-    console.log("pageLength: ", page);
-    console.log("skip: ", page * pageLength);
+    let searchQuery = `${endpoint}?client_id=${client_id}&limit=${pageLength}&skip=${page * pageLength ?? 0}&${buildFieldsQueryString()}`;
     if (query) {
         searchQuery += `&name=${query.substring(0, 50)}`;
     }
@@ -120,6 +117,49 @@ export const buildSearchQuery = (query: string, page: number, pageLength: number
         searchQuery += `&gt_max_players=${parseInt(players) - 1}`;
     }
     return searchQuery;
+}
+
+export const buildSearchIdsQuery = (ids: string[]) => {
+    let searchQuery = `${endpoint}?client_id=${client_id}&limit=100&${buildFieldsQueryString()}`;
+
+    if (ids) {
+        searchQuery += `&ids=${ids.join(",")}`;
+    }
+
+    return searchQuery;
+}
+
+export const searchGamesByIds = async (searchQuery: string) => {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    let cacheKey = `gamelist:${today}`;
+    let games = [] as Game[];
+
+    if (searchQuery) {
+        const cache = await createCacheClient();
+        try {
+            cacheKey += `:${searchQuery}`;
+            const cacheResponse = await cache.get(cacheKey);
+            if (cacheResponse) {
+                const apiResponse = JSON.parse(cacheResponse) as ApiResponse;
+                games = apiResponse.games;
+            }
+
+            if (!games || games.length === 0) {
+                console.log("Fetching results from API...");
+                const response = await fetch(searchQuery);
+                const apiResponse = await response.json() as ApiResponse;
+                games = apiResponse.games;
+
+                // Cache games list for 1 day
+                await cache.set(cacheKey, JSON.stringify(apiResponse), { EX: 86400 });
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            await cache.disconnect();
+        }
+    }
+    return games;
 }
 
 export const getSearchTitle = (req: NextApiRequest, categories: Category[], mechanics: Mechanic[]) => {

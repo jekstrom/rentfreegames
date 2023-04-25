@@ -1,6 +1,7 @@
 import { CosmosClient } from '@azure/cosmos';
-import { Session, User } from '../interfaces';
+import { GuestUser, Session, User } from '../interfaces';
 import { nanoid } from 'nanoid/non-secure';
+import * as crypto from 'crypto';
 
 const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
@@ -9,7 +10,7 @@ const client = new CosmosClient({ endpoint, key });
 const DATABASE = { id: "Session Database" };
 const CONTAINER = { id: "Session Container" };
 
-function cleanUser(user: User) {
+function cleanUser(user: User | GuestUser) {
   if (!user) {
     return user;
   }
@@ -20,7 +21,7 @@ function cleanUser(user: User) {
   return user;
 }
 
-export async function postSessionData(title: string, user: User): Promise<Session> {
+export async function postSessionData(title: string, user: User | GuestUser): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
@@ -60,7 +61,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
   }
 }
 
-export async function addSessionUser(sessionId: string, user: User, inviteId: string): Promise<Session> {
+export async function addSessionUser(sessionId: string, user: User | GuestUser, inviteId: string): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 

@@ -12,12 +12,13 @@ import { styled } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import * as React from 'react';
 import { useSWRConfig } from "swr";
-import { Category, Game, Mechanic, Owner, User, GameRating } from '../interfaces';
+import { Category, Game, Mechanic, Owner, User, GuestUser, GameRating } from '../interfaces';
 import { getSession } from '../pages/sessions/[id]';
 import Rating from '@mui/material/Rating';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { tomato } from '../styles/theme';
+import { useGuestUserContext } from './GuestUserContext';
 
 function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Game, handleRating: any }) {
     return (
@@ -124,7 +125,7 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(users: User[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
+function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     users.forEach(user => {
@@ -212,8 +213,9 @@ export default function GameSessionResults({
 }) {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
+    const guestUser = useGuestUserContext();
 
-    const { data, error, isLoading, isValidating, url } = getSession(id);
+    const { data, error, isLoading, isValidating, url } = getSession(id, guestUser?.id);
     const { mutate } = useSWRConfig()
 
     if (error) {
@@ -225,23 +227,26 @@ export default function GameSessionResults({
         return <CircularProgress />
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 
     const handleRating = async (sessionId: string, gameId: string, rating: number) => {
         if (sessionId && gameId && rating > 0) {
             const currentRatings = data?.gameSession?.userGameRatings ?? [];
-            const newRating = { gameId: gameId, userId: data.sessionUser.id, rating: rating };
+            const newRating = { gameId: gameId, userId: data.sessionUser?.id ?? guestUser.id, rating: rating };
             if (currentRatings.length === 0 || !currentRatings.some(r => r.gameId === gameId && r.userId === data.sessionUser.id)) {
                 currentRatings.push(newRating);
             }
 
-            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId ===  data.sessionUser.id ? { ...r, rating: rating } : { ...r});
+            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId ===  (data.sessionUser?.id ?? guestUser.id) ? { ...r, rating: rating } : { ...r});
 
             const gameSession = data.gameSession;
             gameSession.userGameRatings = newRatings;
-            await postData(`/api/sessions/${sessionId}`, { gameId, rating }).then(async () => {
+            let url = `/api/sessions/${sessionId}`;
+            if (guestUser?.id) {
+                url = `/api/sessions/${sessionId}?guestId=${guestUser.id}`;
+            }
+            await postData(url, { gameId, rating }).then(async () => {
                 await mutate(url, {
                     ...data,
                     gameSession
@@ -258,7 +263,7 @@ export default function GameSessionResults({
             <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                 <Grid container item spacing={3}>
                     {
-                        getUserGames(data.gameSession.users, data.sessionUser.id, query, playerCount, mechanic, category, owned, data.gameSession.userGameRatings, ratingSort).map((row) => (
+                        getUserGames(data.gameSession?.users, data.sessionUser?.id ?? guestUser.id, query, playerCount, mechanic, category, owned, data.gameSession?.userGameRatings, ratingSort).map((row) => (
                             <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
                         ))
                     }

@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from '../auth/[...nextauth]'
 import { getSessionData, updateSession } from '../../../lib/sessions'
 import { getCategories, getMechanics } from '../../../lib/search'
-import { getUserData } from '../../../lib/users'
-import { User } from '../../../interfaces'
+import { getUserData, getGuestUserData } from '../../../lib/users'
+import { User, GuestUser } from '../../../interfaces'
 
 function cleanUser(user: User) {
     if (!user) {
@@ -20,15 +20,22 @@ function cleanUser(user: User) {
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const userSession = await getServerSession(req, res, authOptions);
 
-    if (!userSession?.user?.email) {
-        res.status(401).json({ message: "You must be logged in." });
-        return;
-    }
-
-    const userData = cleanUser(await getUserData(userSession.user.email));
+    let userData = null as User | GuestUser;
+    userData = cleanUser(await getUserData(userSession?.user?.email));
 
     const { query } = req
+    const { guestId } = query
     const { id } = query
+
+    if (!userData) {
+        userData = await getGuestUserData(guestId as string);
+    }
+    if (!userData) {
+        res.status(401).json({ message: "No user." });
+        return;
+    }
+    
+    
     if (!id) {
         res.status(400).json({ message: "Missing id." });
         return;
@@ -53,11 +60,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const gameSessions = await getSessionData(id as string);
         const gameSession = gameSessions[0];
 
-        if (!gameSession.users.some(u => u.id == userData.id)) {
-            console.log(`User ${userData.id} not found in session ${id}.`);
-            res.status(404).json({ message: "User not found in session." });
-            return;
-        }
+        // Logic to restrict to only registered users, no guests
+        // if (!gameSession.users.some(u => u.id == userData.id)) {
+        //     console.log(`User ${userData.id} not found in session ${id}.`);
+        //     res.status(404).json({ message: "User not found in session." });
+        //     return;
+        // }
 
         gameSession.userGameRatings = gameSession.userGameRatings || [];
         if (!gameSession.userGameRatings.some(u => u.userId == userData.id && u.gameId == payload.gameId)) {

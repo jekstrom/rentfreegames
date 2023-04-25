@@ -8,13 +8,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
-import { styled } from '@mui/material/styles';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 import { useSWRConfig } from "swr";
-import { Category, Game, Mechanic, Owner, User } from '../interfaces';
+import { Category, Game, Mechanic, Owner, User, GuestUser } from '../interfaces';
 import { getInviteSession } from '../pages/sessions/invite/[inviteId]';
+import { useGuestUserContext } from './GuestUserContext';
 
 function FormRow({ row }: { row: Game }) {
     return (
@@ -97,14 +96,16 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(user: User, userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, sessionPlayerCount?: number): Game[] {
+function getUserGames(user: User | GuestUser, userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, sessionPlayerCount?: number): Game[] {
     // Flatten list of games
     let games: Game[] = [];
-    user.games.forEach(game => {
-        game.owned = user.id === userId;
-        game.ownedBy = [{ name: user.name, userId: user.id }];
-        games.push(game);
-    });
+    if (user) {
+        user.games.forEach(game => {
+            game.owned = user.id === userId;
+            game.ownedBy = [{ name: user.name, userId: user.id }];
+            games.push(game);
+        });
+    }
 
     if (query) {
         games = games.filter(g => g.name.toLowerCase().includes(query.toLowerCase()));
@@ -119,7 +120,6 @@ function getUserGames(user: User, userId: string, query: string, playerCount?: s
     }
 
     if (mechanic) {
-        console.log("Filtering by mechanic: ", mechanic)
         games = games.filter(g => g.mechanics.some(m => m.id == mechanic.id));
     }
 
@@ -156,8 +156,9 @@ export default function GameSessionInviteResults({
     sessionPlayerCount?: number
 }) {
     const router = useRouter();
+    const guestUser = useGuestUserContext();
 
-    const { data, error, isLoading, isValidating, url } = getInviteSession(id);
+    const { data, error, isLoading, isValidating, url } = getInviteSession(id, guestUser);
     const { mutate } = useSWRConfig()
 
     if (error) {
@@ -169,7 +170,6 @@ export default function GameSessionInviteResults({
         return <CircularProgress />
     }
     if (!data) {
-        console.log("data: ", data);
         return null;
     }
 
@@ -177,7 +177,7 @@ export default function GameSessionInviteResults({
         router.push(`/games?inviteId=${id}`)
     }
 
-    const games = getUserGames(data.user, data.user.id, query, playerCount, mechanic, category, owned, sessionPlayerCount);
+    const games = getUserGames(data.user, data.user?.id, query, playerCount, mechanic, category, owned, sessionPlayerCount);
 
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>

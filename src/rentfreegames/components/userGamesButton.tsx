@@ -7,11 +7,15 @@ import { useRouter } from 'next/router';
 import * as React from 'react';
 import useSWR from 'swr';
 import { ResponseError, User } from '../interfaces';
+import { useGuestUserContext } from './GuestUserContext';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export function getUserGames() {
-    const url = "/api/users"
+export function getUserGames(guestId?: string) {
+    let url = "/api/users";
+    if (url && guestId) {
+        url += `?guestId=${guestId}`;
+    }
     const { data, error, isLoading, isValidating } = useSWR<
         { message: string, user: User },
         ResponseError
@@ -33,7 +37,9 @@ export default function UserGames() {
     const { data: userSession, status } = useSession();
     const userEmail = userSession?.user.email;
 
-    const { data, error, isLoading, isValidating, url } = getUserGames();
+    const guestUser = useGuestUserContext();
+
+    const { data, error, isLoading, isValidating, url } = getUserGames(guestUser?.id);
 
     if (error) {
         console.log("Failed to load user");
@@ -53,7 +59,7 @@ export default function UserGames() {
     return (
         <div>
             {
-                status === "authenticated" && data && data.user.games?.length > 0
+                (status === "authenticated" || guestUser?.id) && data && data.user.games?.length > 0
                     ? <Grid item>
                         <Button onClick={myGames}><ForwardIcon sx={{ marginRight: 1, color: "secondary.light" }} /> My games ({data.user.games?.length ?? 0})</Button>
                     </Grid>

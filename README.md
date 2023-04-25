@@ -124,3 +124,6 @@ send cal inv to people
 
 scan barcode to add game
 
+swipes
+
+submit feedback

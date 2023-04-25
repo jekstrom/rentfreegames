@@ -14,7 +14,7 @@ export default function Search({
       <Box
         component="form"
         sx={{
-          '& .MuiTextField-root': { m: 1, width: '100%' },
+          '& .MuiTextField-root': { marginTop: 1, width: '100%' },
         }}
       >
         <DebounceInput

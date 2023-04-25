@@ -18,7 +18,7 @@ export default function SearchFiltersMechanic({
     }
 
     return (
-        <Box sx={{ padding: 1 }}>
+        <Box sx={{ paddingTop: 1, paddingRight: 1 }}>
             <Autocomplete
                 {...mechanicProps}
                 disablePortal

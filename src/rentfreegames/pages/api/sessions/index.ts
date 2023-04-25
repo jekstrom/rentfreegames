@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from '../auth/[...nextauth]'
-import { getUserData } from '../../../lib/users'
+import { getUserData, getGuestUserData } from '../../../lib/users'
 import { getSessionData, getUserSessionsData, postSessionData } from '../../../lib/sessions'
-import { User } from '../../../interfaces'
+import { User, GuestUser } from '../../../interfaces'
 
 function cleanUser(user: User) {
     if (!user) {
@@ -19,8 +19,17 @@ function cleanUser(user: User) {
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const userSession = await getServerSession(req, res, authOptions);
 
-    if (!userSession?.user?.email) {
-        res.status(401).json({ message: "You must be logged in." });
+    let userData = null as User | GuestUser;
+    userData = cleanUser(await getUserData(userSession?.user?.email));
+
+    const { query } = req
+    const { guestId } = query
+
+    if (!userData) {
+        userData = await getGuestUserData(guestId as string);
+    }
+    if (!userData) {
+        res.status(401).json({ message: "No user." });
         return;
     }
 
@@ -31,20 +40,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             return;
         }
 
-        const userData = cleanUser(await getUserData(userSession.user.email));
-
         const newSession = await postSessionData(payload.title, userData);
 
         return res.json(newSession);
-    } else if (req.method === 'GET') {
-        const userSession = await getServerSession(req, res, authOptions);
-
-        if (!userSession?.user?.email) {
-            res.status(401).json({ message: "You must be logged in." });
-            return;
-        }
-        const userData = cleanUser(await getUserData(userSession.user.email));
-    
+    } else if (req.method === 'GET') {    
         let gameSessions = await getUserSessionsData(userData.id as string);    
     
         return gameSessions
