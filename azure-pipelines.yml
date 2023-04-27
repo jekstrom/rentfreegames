@@ -23,8 +23,8 @@ stages:
 - stage: Build
   displayName: Build and push stage
   jobs:
-  - job: Build Docker
-    displayName: Build Docker
+  - job: BuildDocker
+    displayName: BuildDocker
     pool:
       vmImage: $(vmImageName)
     steps:
