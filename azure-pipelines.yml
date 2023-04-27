@@ -45,7 +45,7 @@ stages:
   jobs:
   - job: BuildDocker
     displayName: BuildDocker
-    condition: and(succeeded(), eq(variables.isMain, true))
+    condition: and(succeeded(), eq(variables.isMaster, true))
     pool:
       vmImage: $(vmImageName)
     steps:
