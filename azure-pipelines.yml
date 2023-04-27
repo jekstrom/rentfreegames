@@ -19,12 +19,33 @@ variables:
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
 
+  isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
 stages:
 - stage: Build
   displayName: Build and push stage
   jobs:
   - job: BuildDocker
     displayName: BuildDocker
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+
+- stage: BuildProd
+  displayName: Build and push prod
+  jobs:
+  - job: BuildDocker
+    displayName: BuildDocker
+    condition: and(succeeded(), eq(variables.isMain, true))
     pool:
       vmImage: $(vmImageName)
     steps:
