@@ -10,7 +10,7 @@ const client = new CosmosClient({ endpoint, key });
 const DATABASE = { id: "Session Database" };
 const CONTAINER = { id: "Session Container" };
 
-function cleanUser(user: User | GuestUser) {
+function cleanUser(user: User) {
   if (!user) {
     return user;
   }
@@ -21,7 +21,7 @@ function cleanUser(user: User | GuestUser) {
   return user;
 }
 
-export async function postSessionData(title: string, user: User | GuestUser): Promise<Session> {
+export async function postSessionData(title: string, user: User): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
@@ -61,7 +61,7 @@ export async function postSessionData(title: string, user: User | GuestUser): Pr
   }
 }
 
-export async function addSessionUser(sessionId: string, user: User | GuestUser, inviteId: string): Promise<Session> {
+export async function addSessionUser(sessionId: string, user: User, inviteId: string): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
