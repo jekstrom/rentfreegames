@@ -14,13 +14,14 @@ resource "azurerm_linux_web_app" "rfg" {
 
   site_config {
     application_stack {
-      docker_image = "jekstrom/rfg"
+      docker_image     = "jekstrom/rfg"
       docker_image_tag = "latest"
     }
   }
 
-
-  app_settings = {
-
+  lifecycle {
+    ignore_changes = [
+      app_settings
+    ]
   }
 }
