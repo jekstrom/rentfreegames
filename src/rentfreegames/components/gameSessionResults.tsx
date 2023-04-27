@@ -125,7 +125,7 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
+export function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     users.forEach(user => {

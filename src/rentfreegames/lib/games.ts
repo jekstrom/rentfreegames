@@ -25,7 +25,7 @@ const createCacheClient = async () => {
 }
 
 const buildFieldsQueryString = () => {
-  return "fields=id,name,description,images,url,min_players,max_players,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics"
+  return "fields=id,name,description,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
 }
 
 export async function getSortedGamesData(id?: string | string[]): Promise<Game[]> {

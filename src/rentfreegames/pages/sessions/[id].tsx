@@ -18,6 +18,7 @@ import SearchSortRating from '../../components/searchRatingSort'
 import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 import { useGuestUserContext } from '../../components/GuestUserContext';
+import SessionSwiping from '../../components/sessionSwiping'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -149,6 +150,8 @@ export default function SessionDetails() {
             </section>
 
             <PlayerList players={data?.gameSession?.users} user={data.sessionUser} host={data?.gameSession?.createdBy} />
+
+            <SessionSwiping />
 
             <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Games"} />
         </Layout>

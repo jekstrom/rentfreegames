@@ -171,7 +171,7 @@ export interface Session {
     title: string,
     created: Date,
     inviteId: string,
-    users: (User | GuestUser)[],
+    users: User[],
     createdBy: User | GuestUser,
     games?: Game[],
     userGameRatings?: GameRating[]
