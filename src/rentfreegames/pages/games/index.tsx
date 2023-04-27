@@ -13,8 +13,7 @@ import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import { Category, Game, GuestUser, Mechanic } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
-import CircularProgress from '@mui/material/CircularProgress';
-import { Router, useRouter } from 'next/router'
+import { useRouter } from 'next/router'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useGuestUserContext } from '../../components/GuestUserContext'
 

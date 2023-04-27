@@ -1,7 +1,5 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import { Divider, Grid, IconButton, InputBase, Paper, SelectChangeEvent, Typography } from '@mui/material'
-import CircularProgress from '@mui/material/CircularProgress'
-import { useSession } from 'next-auth/react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { ReactNode } from 'react'

@@ -16,7 +16,6 @@ import GameSessionResults from '../../../components/gameSessionResults';
 import SearchFiltersCategory from '../../../components/searchFiltersCategory';
 import SearchFiltersMechanic from '../../../components/searchFiltersMechanic';
 import { useSession } from 'next-auth/react';
-import { Sign } from 'crypto';
 import Signin from '../../../components/signin';
 import { useGuestUserContext } from '../../../components/GuestUserContext';
 
