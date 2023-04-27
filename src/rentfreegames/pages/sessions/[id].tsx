@@ -151,7 +151,12 @@ export default function SessionDetails() {
 
             <PlayerList players={data?.gameSession?.users} user={data.sessionUser} host={data?.gameSession?.createdBy} />
 
-            <SessionSwiping />
+            {
+                false
+                ? <SessionSwiping />
+                : <></>
+            }
+            
 
             <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Games"} />
         </Layout>

@@ -19,9 +19,19 @@ resource "azurerm_linux_web_app" "rfg" {
     }
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   lifecycle {
     ignore_changes = [
       app_settings
     ]
   }
 }
+
+# resource "azurerm_role_assignment" "rfg_role_assignment" {
+#   role_definition_name = "AcrPull"
+#   scope                = azurerm_container_registry.rfg.id
+#   principal_id         = azurerm_linux_web_app.rfg.identity[0].principal_id
+# }
