@@ -161,24 +161,24 @@ export default function SessionSwiping() {
             if (newSwipableGames.length > 0) {
                 setCurrentSwipe(newSwipableGames[0]);
             }
+            await addUserSwipedGame(game.id, true);
             if (newSwipableGames.length === 0) {
                 setOpen(false);
                 showSnack()
                 setIsExploding(true);
             }
-            await addUserSwipedGame(game.id, true);
         } else if (info.offset.x < -200) {
             const newSwipableGames = swipableGames.filter(g => g.id !== game.id);
             setSwipableGames(newSwipableGames);
             if (newSwipableGames.length > 0) {
                 setCurrentSwipe(newSwipableGames[0]);
             }
+            await addUserSwipedGame(game.id, false);
             if (newSwipableGames.length === 0) {
                 setOpen(false);
                 showSnack()
                 setIsExploding(true);
             }
-            await addUserSwipedGame(game.id, false);
         }
         if (swipableGames.length === 0) {
             setOpen(false);
