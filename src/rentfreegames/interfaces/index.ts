@@ -174,11 +174,18 @@ export interface Session {
     users: User[],
     createdBy: User | GuestUser,
     games?: Game[],
-    userGameRatings?: GameRating[]
+    userGameRatings?: GameRating[],
+    userSwipes?: GameSwipe[]
 }
 
 export interface GameRating {
     gameId: string,
     userId: string,
     rating: number
+}
+
+export interface GameSwipe {
+    gameId: string,
+    userId: string,
+    swipedRight: boolean
 }

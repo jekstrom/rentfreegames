@@ -35,7 +35,8 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
         inviteId: `inv--${nanoid()}`,
         createdBy: cleanedUser,
         users: [cleanedUser],
-        userGameRatings: []
+        userGameRatings: [],
+        userSwipes: []
       }
     );
 
@@ -53,7 +54,8 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
       users: result.resource.users,
-      userGameRatings: result.resource.userGameRatings
+      userGameRatings: result.resource.userGameRatings,
+      userSwipes: result.resource.userSwipes
     };
   }
   catch (ex) {
@@ -81,7 +83,8 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
         inviteId: existingSession.inviteId,
         createdBy: existingSession.createdBy,
         users: [...existingSession.users, user],
-        userGameRatings: existingSession.userGameRatings
+        userGameRatings: existingSession.userGameRatings,
+        userSwipes: existingSession.userSwipes
       }
     );
 
@@ -98,11 +101,59 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
       users: result.resource.users,
-      userGameRatings: result.resource.userGameRatings
+      userGameRatings: result.resource.userGameRatings,
+      userSwipes: result.resource.userSwipes
     };
   }
   catch (ex) {
     console.log("Exception postSessionData: ", ex);
+  }
+}
+
+export async function updateUserSwipes(sessionId: string, userId: string, gameId: string, swipedRight: boolean): Promise<Session> {
+  const { database } = await client.databases.createIfNotExists(DATABASE);
+  const { container } = await database.containers.createIfNotExists(CONTAINER);
+
+  try {
+    const existingSessions = await getSessionData(sessionId);
+    const existingSession = existingSessions[0];
+
+    existingSession.userSwipes = existingSession.userSwipes || [];
+    existingSession.userSwipes = existingSession.userSwipes.filter(s => !(s.userId === userId && s.gameId === gameId));
+    existingSession.userSwipes.push({ userId, gameId, swipedRight });
+
+    const result = await container.items.upsert(
+      {
+        id: existingSession.id,
+        title: existingSession.title,
+        created: existingSession.created,
+        inviteId: existingSession.inviteId,
+        createdBy: existingSession.createdBy,
+        users: existingSession.users,
+        userGameRatings: existingSession.userGameRatings,
+        userSwipes: existingSession.userSwipes
+      }
+    );
+
+    if (result.statusCode >= 400) {
+      console.log(result.statusCode);
+      console.log(result.substatus);
+      return null;
+    }
+
+    return {
+      id: result.resource.id,
+      title: result.resource.title,
+      created: new Date(result.resource.created),
+      inviteId: result.resource.inviteId,
+      createdBy: result.resource.createdBy,
+      users: result.resource.users,
+      userGameRatings: result.resource.userGameRatings,
+      userSwipes: result.resource.userSwipes
+    };
+  }
+  catch (ex) {
+    console.log("Exception updateUserSwipes: ", ex.message);
   }
 }
 
@@ -198,7 +249,8 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
             users: gameSession.users,
-            userGameRatings: gameSession.userGameRatings
+            userGameRatings: gameSession.userGameRatings,
+            userSwipes: gameSession.userSwipes
           }
         );
 
@@ -227,7 +279,8 @@ export async function updateSession(gameSession: Session): Promise<Session> {
         inviteId: gameSession.inviteId,
         createdBy: gameSession.createdBy,
         users: gameSession.users,
-        userGameRatings: gameSession.userGameRatings
+        userGameRatings: gameSession.userGameRatings,
+        userSwipes: gameSession.userSwipes
       }
     );
 
@@ -276,7 +329,8 @@ export async function updateUserGameSession(sessionId: string, user: User): Prom
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
             users: gameSession.users,
-            userGameRatings: gameSession.userGameRatings
+            userGameRatings: gameSession.userGameRatings,
+            userSwipes: gameSession.userSwipes
           }
         );
 

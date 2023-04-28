@@ -150,7 +150,7 @@ export default function SessionDetails() {
             <PlayerList players={data?.gameSession?.users} user={data.sessionUser} host={data?.gameSession?.createdBy} />
 
             {
-                false
+                true
                 ? <SessionSwiping />
                 : <></>
             }

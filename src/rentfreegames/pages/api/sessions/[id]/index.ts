@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
-import { authOptions } from '../auth/[...nextauth]'
-import { getSessionData, updateSession } from '../../../lib/sessions'
-import { getCategories, getMechanics } from '../../../lib/search'
-import { getUserData, getGuestUserData } from '../../../lib/users'
-import { User, GuestUser } from '../../../interfaces'
+import { authOptions } from '../../auth/[...nextauth]'
+import { getSessionData, updateSession } from '../../../../lib/sessions'
+import { getCategories, getMechanics } from '../../../../lib/search'
+import { getUserData, getGuestUserData } from '../../../../lib/users'
+import { User, GuestUser } from '../../../../interfaces'
 
 function cleanUser(user: User) {
     if (!user) {
@@ -34,7 +34,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(401).json({ message: "No user." });
         return;
     }
-    
     
     if (!id) {
         res.status(400).json({ message: "Missing id." });
