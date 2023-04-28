@@ -132,6 +132,7 @@ export default function SessionSwiping() {
     }
 
     const [swipableGames, setSwipableGames] = React.useState(getUserSwipableGames(data?.gameSession?.users, data.sessionUser?.id ?? guestUser.id, data?.gameSession?.userGameRatings, data?.gameSession?.userSwipes));
+    const [currentSwipe, setCurrentSwipe] = React.useState(swipableGames[0]);
 
     if (error) {
         console.log("Failed to load");
@@ -155,10 +156,14 @@ export default function SessionSwiping() {
 
     const onDragEnd = async (event, info, game) => {
         if (info.offset.x > 200) {
-            setSwipableGames(swipableGames.filter(g => g.id !== game.id));
+            const newSwipableGames = swipableGames.filter(g => g.id !== game.id);
+            setSwipableGames(newSwipableGames);
+            setCurrentSwipe(newSwipableGames[0]);
             await addUserSwipedGame(game.id, true);
         } else if (info.offset.x < -200) {
-            setSwipableGames(swipableGames.filter(g => g.id !== game.id));
+            const newSwipableGames = swipableGames.filter(g => g.id !== game.id);
+            setSwipableGames(newSwipableGames);
+            setCurrentSwipe(newSwipableGames[0]);
             await addUserSwipedGame(game.id, false);
         }
         if (swipableGames.length === 1) {
@@ -207,7 +212,7 @@ export default function SessionSwiping() {
                     }} key="swipable-games">
                         {
                             games ? games.map((game) => (
-                                swipableGames.some(g => g.id == game.id)
+                                currentSwipe.id === game.id && swipableGames.some(g => g.id == game.id)
                                     ? <GameCard game={game} onDragEnd={onDragEnd} key={game.id} />
                                     : <div key={game.id}></div>
                             ))
