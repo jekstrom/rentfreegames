@@ -133,6 +133,19 @@ export default function SessionSwiping() {
 
     const [swipableGames, setSwipableGames] = React.useState(getUserSwipableGames(data?.gameSession?.users, data.sessionUser?.id ?? guestUser.id, data?.gameSession?.userGameRatings, data?.gameSession?.userSwipes));
     const [currentSwipe, setCurrentSwipe] = React.useState(swipableGames.length > 0 ? swipableGames[0] : null);
+    const [swipedGames, setSwipedGames] = React.useState([] as GameSwipe[]);
+
+    let didMount = React.useRef(false);
+    React.useEffect(() => {
+        console.log("Use effect: ", swipableGames.length)
+        if (didMount.current && swipableGames.length === 0) {
+            handleClose();
+            showSnack()
+            setIsExploding(true);
+        } else {
+            didMount.current = true;
+        }
+    }, [swipableGames]);
 
     if (error) {
         console.log("Failed to load");
@@ -150,10 +163,12 @@ export default function SessionSwiping() {
         setOpen(true);
     };
 
-    const handleClose = () => {
+    const handleClose = async () => {
         setOpen(false);
+        await postData(`/api/sessions/${data.gameSession.id}/user/${data.sessionUser?.id ?? guestUser.id}`, { swipedGames });
     };
 
+    // handle all swipes on close or delay.
     const onDragEnd = async (event, info, game) => {
         if (info.offset.x > 200) {
             const newSwipableGames = swipableGames.filter(g => g.id !== game.id);
@@ -161,36 +176,21 @@ export default function SessionSwiping() {
             if (newSwipableGames.length > 0) {
                 setCurrentSwipe(newSwipableGames[0]);
             }
-            await addUserSwipedGame(game.id, true);
-            if (newSwipableGames.length === 0) {
-                setOpen(false);
-                showSnack()
-                setIsExploding(true);
-            }
+            addUserSwipedGame(data.sessionUser?.id ?? guestUser.id, game.id, true);
         } else if (info.offset.x < -200) {
             const newSwipableGames = swipableGames.filter(g => g.id !== game.id);
             setSwipableGames(newSwipableGames);
             if (newSwipableGames.length > 0) {
                 setCurrentSwipe(newSwipableGames[0]);
             }
-            await addUserSwipedGame(game.id, false);
-            if (newSwipableGames.length === 0) {
-                setOpen(false);
-                showSnack()
-                setIsExploding(true);
-            }
-        }
-        if (swipableGames.length === 0) {
-            setOpen(false);
-            showSnack()
-            setIsExploding(true);
+            addUserSwipedGame(data.sessionUser?.id ?? guestUser.id, game.id, false);
         }
     }
 
 
-    const addUserSwipedGame = async (gameId: string, liked: boolean) => {
+    const addUserSwipedGame = async (userId:string, gameId: string, liked: boolean) => {
         if (data?.gameSession?.id && gameId) {
-            await postData(`/api/sessions/${data.gameSession.id}/user/${data.sessionUser?.id ?? guestUser.id}`, { gameId, liked });
+            setSwipedGames([...swipedGames, { userId, gameId, swipedRight: liked } as GameSwipe]);
         }
     }
 

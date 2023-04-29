@@ -1,5 +1,5 @@
 import { CosmosClient } from '@azure/cosmos';
-import { GuestUser, Session, User } from '../interfaces';
+import { GameSwipe, GuestUser, Session, User } from '../interfaces';
 import { nanoid } from 'nanoid/non-secure';
 import * as crypto from 'crypto';
 
@@ -110,7 +110,7 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
   }
 }
 
-export async function updateUserSwipes(sessionId: string, userId: string, gameId: string, swipedRight: boolean): Promise<Session> {
+export async function updateUserSwipes(sessionId: string, swipedGames: GameSwipe[]): Promise<Session> {
   const { database } = await client.databases.createIfNotExists(DATABASE);
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
@@ -119,8 +119,8 @@ export async function updateUserSwipes(sessionId: string, userId: string, gameId
     const existingSession = existingSessions[0];
 
     existingSession.userSwipes = existingSession.userSwipes || [];
-    existingSession.userSwipes = existingSession.userSwipes.filter(s => !(s.userId === userId && s.gameId === gameId));
-    existingSession.userSwipes.push({ userId, gameId, swipedRight });
+    existingSession.userSwipes = existingSession.userSwipes.filter(s => swipedGames.some(sw => !(s.userId === sw.userId && s.gameId === sw.gameId)));
+    existingSession.userSwipes = [...existingSession.userSwipes, ...swipedGames];
 
     const result = await container.items.upsert(
       {

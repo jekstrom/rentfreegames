@@ -4,7 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { getGameData } from '../../../../../lib/games'
 import { addGame, getUserData, getGuestUserData, removeGame } from '../../../../../lib/users'
 import { updateUserSwipes } from '../../../../../lib/sessions'
-import { User, GuestUser } from '../../../../../interfaces'
+import { User, GuestUser, GameSwipe } from '../../../../../interfaces'
 
 function cleanUser(user: User) {
     if (!user) {
@@ -49,22 +49,25 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === 'POST') {
         console.log("POSTING to session user endpoint");
 
-        if (!payload.gameId) {
-            res.status(400).json({ message: "Missing game id." });
+        if (!payload.swipedGames) {
+            res.status(400).json({ message: "Missing swipedGames." });
             return;
         }
 
-        const updatedSession = await updateUserSwipes(
-            id as string,
-            userData.id,
-            payload.gameId as string,
-            payload.liked as boolean
-        );
+        let swipedGames = payload.swipedGames as GameSwipe[];
+        swipedGames = swipedGames.map(s => {s.userId = userData.id; return s;});
 
-        return res.json({
-            message: 'Success',
-            session: updatedSession
-        });
+        if (swipedGames.length > 0) {
+            const updatedSession = await updateUserSwipes(
+                id as string,
+                swipedGames
+            );
+
+            return res.json({
+                message: 'Success',
+                session: updatedSession
+            });
+        }
     }
     return res.json({
         message: 'Success',
