@@ -23,7 +23,7 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
     return (
         <React.Fragment>
             <Grid item xs={12} sm={12} md={4}>
-                <Paper elevation={2} sx={{ height: "100%", boxShadow: `0px 0px 10px 2px ${theme.palette.primary.main}` }}>
+                <Paper elevation={2} sx={{ height: "100%", boxShadow: `0px 0px 11px 5px ${theme.palette.secondary.light}` }}>
                     <Grid item xs={12} sm sx={{ height: "88%" }} container padding={1} >
                         <Grid item xs={8} sx={{ height: "100%" }} container direction="column" spacing={2}>
                             <Grid item xs={4} sx={{ height: "100%" }} padding="3px">
