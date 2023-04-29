@@ -1,26 +1,19 @@
+import { Button, Grid, useMediaQuery } from '@mui/material';
 import Backdrop from '@mui/material/Backdrop';
 import Box from '@mui/material/Box';
-import Modal from '@mui/material/Modal';
 import Fade from '@mui/material/Fade';
-import { AppBar, Button, IconButton, Toolbar, Typography, Grid, useMediaQuery } from '@mui/material';
-import Dialog from '@mui/material/Dialog';
-import DialogContent from '@mui/material/DialogContent';
-import * as React from 'react';
-import { useSession } from 'next-auth/react'
-import { Game, GameRating, Owner, User, GameSwipe } from '../interfaces';
-import { getSession } from '../pages/sessions/[id]';
-import { useRouter } from 'next/router';
-import { useGuestUserContext } from './GuestUserContext';
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import Modal from '@mui/material/Modal';
+import Snackbar from '@mui/material/Snackbar';
 import { useTheme } from '@mui/material/styles';
-import StarIcon from '@mui/icons-material/Star';
-import PeopleIcon from '@mui/icons-material/People';
-import CloseIcon from '@mui/icons-material/Close';
-import Snackbar, { SnackbarOrigin } from '@mui/material/Snackbar';
-import { tomato } from '../styles/theme';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ConfettiExplosion from 'react-confetti-explosion';
+import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/router';
+import * as React from 'react';
+import ConfettiExplosion from 'react-confetti-explosion';
+import { Game, GameRating, GameSwipe, Owner, User } from '../interfaces';
+import { getSession } from '../pages/sessions/[id]';
+import { useGuestUserContext } from './GuestUserContext';
+import { useSWRConfig } from 'swr';
 
 const postData = async (url: string, data: any) => {
     const response = await fetch(url, {
@@ -126,7 +119,7 @@ export default function SessionSwiping() {
     const getUserSwipableGames = (users: User[], userId: string, userRatings?: GameRating[], userSwipes?: GameSwipe[]) => {
         let games = getUserGames(users, userId, userRatings);
         if (userSwipes) {
-            return games.filter(g => !userSwipes.some(s => s.gameId === g.id));
+            return games.filter(g => !userSwipes.some(s => s.userId == userId && s.gameId === g.id));
         }
         return games;
     }
@@ -134,10 +127,10 @@ export default function SessionSwiping() {
     const [swipableGames, setSwipableGames] = React.useState(getUserSwipableGames(data?.gameSession?.users, data.sessionUser?.id ?? guestUser.id, data?.gameSession?.userGameRatings, data?.gameSession?.userSwipes));
     const [currentSwipe, setCurrentSwipe] = React.useState(swipableGames.length > 0 ? swipableGames[0] : null);
     const [swipedGames, setSwipedGames] = React.useState([] as GameSwipe[]);
+    const { mutate } = useSWRConfig()
 
     let didMount = React.useRef(false);
     React.useEffect(() => {
-        console.log("Use effect: ", swipableGames.length)
         if (didMount.current && swipableGames.length === 0) {
             handleClose();
             showSnack()
@@ -165,6 +158,16 @@ export default function SessionSwiping() {
 
     const handleClose = async () => {
         setOpen(false);
+        let url = (data?.gameSession?.id ? `/api/sessions/${data.gameSession.id}` : null)
+        if (url && guestUser) {
+            url += `?guestId=${guestUser.id}`
+        }
+
+        await mutate(url, {
+            ...data,
+           gameSession: {...data.gameSession, userSwipes: [...data.gameSession.userSwipes, ...swipedGames]}
+        }, { revalidate: false });
+
         await postData(`/api/sessions/${data.gameSession.id}/user/${data.sessionUser?.id ?? guestUser.id}`, { swipedGames });
     };
 

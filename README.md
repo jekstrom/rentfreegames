@@ -127,3 +127,11 @@ scan barcode to add game
 swipes
 
 submit feedback
+
+calculate recommended game in a session:
+  rating from averge players on board game atlas
+  rank on board game atlas
+  amount of players that swiped right
+  average rating of players in the session
+  player count
+  time alotted

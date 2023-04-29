@@ -4,6 +4,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { ReactNode } from 'react'
 import useSWR from 'swr'
+import { useGuestUserContext } from '../../components/GuestUserContext'
 import GameSessionResults from '../../components/gameSessionResults'
 import Layout from '../../components/layout'
 import PlayerList from '../../components/playersList'
@@ -13,10 +14,10 @@ import SearchFiltersMechanic from '../../components/searchFiltersMechanic'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchSortRating from '../../components/searchRatingSort'
+import SessionSwiping from '../../components/sessionSwiping'
 import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
-import { useGuestUserContext } from '../../components/GuestUserContext';
-import SessionSwiping from '../../components/sessionSwiping'
+import SessionSwipingResults from '../../components/sessionSwipingResults'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -96,7 +97,6 @@ export default function SessionDetails() {
             <article>
                 <h1 className={utilStyles.headingXl}>{data.gameSession.title}</h1>
             </article>
-
             {
                 data?.gameSession?.createdBy?.id === data?.sessionUser?.id
                     ? <section className={utilStyles.headingMd}>
@@ -148,14 +148,11 @@ export default function SessionDetails() {
             </section>
 
             <PlayerList players={data?.gameSession?.users} user={data.sessionUser} host={data?.gameSession?.createdBy} />
-
-            {
-                true
-                ? <SessionSwiping />
-                : <></>
-            }
             
+            <SessionSwiping />
 
+            <SessionSwipingResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Game Night Swipes"} />
+            
             <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Games"} />
         </Layout>
     )

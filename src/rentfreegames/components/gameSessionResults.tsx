@@ -2,7 +2,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BalanceIcon from '@mui/icons-material/Balance';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
-import { Link, Typography } from '@mui/material';
+import { Button, Link, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
@@ -83,9 +83,9 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                             </Box>
                         </Grid>
                         <Grid item xs={4}>
-                            <Box sx={{ display: 'flex', justifyContent: "right"}}>
+                            <Box sx={{ display: 'flex', justifyContent: "right" }}>
                                 <Typography variant="subtitle2" component="div" sx={{ color: "secondary.main", fontSize: 10, marginRight: "8px" }}>
-                                    <FavoriteIcon sx={{ color: tomato, fontSize:14 }}/> {row.rating ? `AVG ${row.avg_rating}` : ""}
+                                    <FavoriteIcon sx={{ color: tomato, fontSize: 14 }} /> {row.rating ? `AVG ${row.avg_rating}` : ""}
                                 </Typography>
                             </Box>
                         </Grid>
@@ -125,7 +125,7 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-export function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
+function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
     // Flatten list of games
     let games: Game[] = [];
     users.forEach(user => {
@@ -156,7 +156,7 @@ export function getUserGames(users: (User | GuestUser)[], userId: string, query:
             games = getGamesByPlayerCount(games, users.length);
         } else if (parseInt(playerCount) > 1) {
             games = games.filter(g => g.max_players >= parseInt(playerCount));
-        } 
+        }
     }
 
     if (mechanic) {
@@ -214,8 +214,9 @@ export default function GameSessionResults({
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
     const guestUser = useGuestUserContext();
-
+    
     const { data, error, isLoading, isValidating, url } = getSession(id, guestUser?.id);
+    const [showGamesList, setShowGamesList] = React.useState(true)
     const { mutate } = useSWRConfig()
 
     if (error) {
@@ -238,7 +239,7 @@ export default function GameSessionResults({
                 currentRatings.push(newRating);
             }
 
-            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId ===  (data.sessionUser?.id ?? guestUser.id) ? { ...r, rating: rating } : { ...r});
+            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId === (data.sessionUser?.id ?? guestUser.id) ? { ...r, rating: rating } : { ...r });
 
             const gameSession = data.gameSession;
             gameSession.userGameRatings = newRatings;
@@ -257,18 +258,25 @@ export default function GameSessionResults({
 
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>
+
+
             <Typography variant="h4" component="div">
-                {title}
+                {title} <Button onClick={() => setShowGamesList(!showGamesList)}><sub>{showGamesList ? "hide" : "show"}</sub></Button>
             </Typography>
-            <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-                <Grid container item spacing={3}>
-                    {
-                        getUserGames(data.gameSession?.users, data.sessionUser?.id ?? guestUser.id, query, playerCount, mechanic, category, owned, data.gameSession?.userGameRatings, ratingSort).map((row) => (
-                            <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
-                        ))
-                    }
+            {
+                showGamesList
+                ? <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
+                    <Grid container item spacing={3}>
+                        {
+                            getUserGames(data.gameSession?.users, data.sessionUser?.id ?? guestUser.id, query, playerCount, mechanic, category, owned, data.gameSession?.userGameRatings, ratingSort).map((row) => (
+                                <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
+                            ))
+                        }
+                    </Grid>
                 </Grid>
-            </Grid>
+                : <></>
+            }
+
         </Box>
     );
 }
