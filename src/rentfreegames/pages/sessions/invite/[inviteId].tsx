@@ -69,7 +69,17 @@ export default function SessionDetails() {
 
     if (error) {
         console.log("Failed to load session");
-        return <Layout><div>Failed to load</div></Layout>
+        if (error.message === "No user.") {
+            return <Layout>
+                <Grid container>
+                    <Grid item>
+                        <Signin />
+                    </Grid>
+                </Grid>
+            </Layout>
+        } else {
+            return <Layout><div>Failed to load</div></Layout>
+        }
     }
     if (isLoading) {
         console.log("Loading...");
@@ -113,13 +123,22 @@ export default function SessionDetails() {
     return (
         <Layout>
             <Head>
-                <title>{data.gameSession.title} invite - RFG</title>
+                <title>{data.gameSession?.title ?? ""} invite - RFG</title>
             </Head>
             {
-                !data?.gameSession.users ? <ErrorPage statusCode={404} /> : <></>
+                !data?.gameSession?.users 
+                ? <Grid container direction="column"
+                alignItems="center"
+                justifyContent="center"
+                columns={{ xs: 12, sm: 12, md: 12 }}
+                spacing={10}>
+                    <Grid item>
+                        <Signin redirect={window.location.pathname}/>
+                    </Grid>
+                </Grid> : <></>
             }
             <article>
-                <h1 className={utilStyles.headingXl}>{data.gameSession.title}</h1>
+                <h1 className={utilStyles.headingXl}>{data?.gameSession?.title ?? ""}</h1>
             </article>
             {
                 (status === "authenticated" || guestUser?.id)
@@ -165,13 +184,18 @@ export default function SessionDetails() {
                         }
                     </section>
                     : <section>
-                        <PlayerList players={data.gameSession.users} user={data.user} host={data.gameSession.createdBy} />
-                        <section>
-                            <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
+                        {
+                            data?.gameSession?.users
+                                ? (
+                                    <section>
+                                        <PlayerList players={data.gameSession.users} user={data?.user ?? guestUser} host={data.gameSession.createdBy} />
 
-                            <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} sessionPlayerCount={data?.gameSession?.users?.length} title={"Your Games"} />
-                        </section>
-                        <Signin />
+                                        <GameSessionResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} title={"Session Games"} />
+
+                                        <GameSessionInviteResults id={query?.inviteId as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={true} sessionPlayerCount={data?.gameSession?.users?.length} title={"Your Games"} />
+                                    </section>)
+                                : <></>
+                        }
                     </section>
             }
         </Layout>

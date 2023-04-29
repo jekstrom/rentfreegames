@@ -29,6 +29,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (guestId) {
         userData = await getGuestUserData(guestId as string);
     }
+    if (!userData) {
+        res.status(401).json({ message: "No user." });
+        return;
+    }
 
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const categories = await getCategories(today);

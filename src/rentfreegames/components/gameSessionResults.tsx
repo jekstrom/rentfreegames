@@ -128,6 +128,9 @@ function getUniqueGames(games: Game[]) {
 function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
     // Flatten list of games
     let games: Game[] = [];
+    if (!users) {
+        return [];
+    }
     users.forEach(user => {
         user.games.forEach(game => {
             game.owned = user.id === userId;
