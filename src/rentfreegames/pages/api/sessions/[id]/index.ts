@@ -4,7 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { getSessionData, updateSession } from '../../../../lib/sessions'
 import { getCategories, getMechanics } from '../../../../lib/search'
 import { getUserData, getGuestUserData } from '../../../../lib/users'
-import { User, GuestUser } from '../../../../interfaces'
+import { User, GuestUser, Game, GameRating, Owner } from '../../../../interfaces'
 
 function cleanUser(user: User) {
     if (!user) {
@@ -15,6 +15,58 @@ function cleanUser(user: User) {
     delete user.sub;
     delete (user as any).email;
     return user;
+}
+
+function getUniqueGames(games: Game[]) {
+    // Unique games by BGGId
+    let uniqueGames = Object.values(
+        games.reduce((acc, obj) => ({ ...acc, [obj.id]: obj }), {})
+    ) as Game[];
+
+    // Remove duplicate owners
+    for (const game of uniqueGames) {
+        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.userId]: obj }), {})) as [Owner];
+    }
+    return uniqueGames;
+}
+
+function mergeGameOwners(games: Game[]): Game[] {
+    for (const game of games) {
+        const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.every(ob => ob.userId !== o.userId)));
+        if (otherGame) {
+            game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
+            otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
+            otherGame.owned = true;
+        }
+    }
+    return games;
+}
+
+function flattenGames(users: User[], userRatings: GameRating[], userId: string) {
+    let games: Game[] = [];
+    if (!users) {
+        return [];
+    }
+    users.forEach(user => {
+        user.games.forEach(game => {
+            game.owned = user.id === userId;
+            game.ownedBy = [{ name: user.name, userId: user.id }];
+            game.rating = 2.5;
+            game.avg_rating = 2.5;
+            if (userRatings) {
+                const gameRatings = userRatings.filter(r => r.gameId === game.id).map(r => r.rating);
+                game.rating = userRatings.find(r => r.gameId === game.id && r.userId === userId)?.rating ?? 2.5;
+                if (gameRatings && gameRatings.length > 0) {
+                    game.avg_rating = Math.round((gameRatings.reduce((r, acc) => acc += r) / gameRatings.length) * 2) / 2 ?? 2.5;
+                }
+            }
+            games.push(game);
+        });
+    });
+
+    games = mergeGameOwners(games);
+
+    return getUniqueGames(games);
 }
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -86,6 +138,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
         let gameSessions = await getSessionData(id as string);
         let gameSession = gameSessions[0];
+
+        gameSession.games = flattenGames(gameSession.users, gameSession.userGameRatings, userData.id).slice(10)
+        gameSession.users = gameSession.users.map(u => {u.games = []; return u});
 
         const categories = await getCategories(today);
         const mechanics = await getMechanics(today);

@@ -19,6 +19,8 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { tomato } from '../styles/theme';
 import { useGuestUserContext } from './GuestUserContext';
+import Image from "next/image";
+
 
 function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Game, handleRating: any }) {
     return (
@@ -27,12 +29,14 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                 <Paper elevation={2} sx={{ height: "100%" }}>
                     <Grid item xs={12} sm sx={{ height: "88%" }} container padding={1} >
                         <Grid item xs={8} sx={{ height: "100%" }} container direction="column" spacing={2}>
-                            <Grid item xs={4} sx={{ height: "100%" }} padding="3px">
+                            <Grid item xs={4} sx={{ height: "150px" }} padding="3px">
+                                <Box sx={{ position: "relative", width: "100px", height: "100px", overflow: "hidden" }}>
                                 {
                                     row.images.small ?
-                                        <Link target="_blank" href={row.url}><img src={row.images.small} style={{ width: "100px", padding: "1px" }} /></Link>
+                                        <Link target="_blank" href={row.url}><Image fill alt={row.name} src={row.images.small} /></Link>
                                         : <></>
                                 }
+                                </Box>
                                 <Tooltip title={row.name}>
                                     <Typography gutterBottom variant="overline" component="div" sx={row.name.length > 15 ? { fontSize: 10, padding: "1px" } : { fontSize: 14, padding: "3px" }}>
                                         {row.name.length > 50 ? row.name.substring(0, 50) + "..." : row.name}
@@ -125,30 +129,11 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(users: (User | GuestUser)[], userId: string, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, userRatings?: GameRating[], ratingSort?: string): Game[] {
+function getUserGames(games: Game[], userCount: number, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, ratingSort?: string): Game[] {
     // Flatten list of games
-    let games: Game[] = [];
-    if (!users) {
+    if (!games) {
         return [];
     }
-    users.forEach(user => {
-        user.games.forEach(game => {
-            game.owned = user.id === userId;
-            game.ownedBy = [{ name: user.name, userId: user.id }];
-            game.rating = 2.5;
-            game.avg_rating = 2.5;
-            if (userRatings) {
-                const gameRatings = userRatings.filter(r => r.gameId === game.id).map(r => r.rating);
-                game.rating = userRatings.find(r => r.gameId === game.id && r.userId === userId)?.rating ?? 2.5;
-                if (gameRatings && gameRatings.length > 0) {
-                    game.avg_rating = Math.round((gameRatings.reduce((r, acc) => acc += r) / gameRatings.length) * 2) / 2 ?? 2.5;
-                }
-            }
-            games.push(game);
-        });
-    });
-
-    games = mergeGameOwners(games);
 
     if (query) {
         games = games.filter(g => g.name.toLowerCase().includes(query.toLowerCase()));
@@ -156,12 +141,12 @@ function getUserGames(users: (User | GuestUser)[], userId: string, query: string
 
     if (playerCount) {
         if (playerCount === "players") {
-            games = getGamesByPlayerCount(games, users.length);
+            games = getGamesByPlayerCount(games, userCount);
         } else if (parseInt(playerCount) > 1) {
             games = games.filter(g => g.max_players >= parseInt(playerCount));
         }
     }
-
+    
     if (mechanic) {
         console.log("Filtering by mechanic: ", mechanic)
         games = games.filter(g => g.mechanics.some(m => m.id == mechanic.id));
@@ -175,7 +160,7 @@ function getUserGames(users: (User | GuestUser)[], userId: string, query: string
         games = games.filter(g => g.owned);
     }
 
-    return getUniqueGames(games).sort((a, b) => {
+    return games.sort((a, b) => {
         if (ratingSort === "user") {
             return b.rating - a.rating;
         } else if (ratingSort === "session") {
@@ -271,7 +256,7 @@ export default function GameSessionResults({
                 ? <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                     <Grid container item spacing={3}>
                         {
-                            getUserGames(data.gameSession?.users, data.sessionUser?.id ?? guestUser.id, query, playerCount, mechanic, category, owned, data.gameSession?.userGameRatings, ratingSort).map((row) => (
+                            getUserGames(data.gameSession?.games, data.gameSession?.users?.length ?? 0, query, playerCount, mechanic, category, owned, ratingSort).map((row) => (
                                 <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
                             ))
                         }
