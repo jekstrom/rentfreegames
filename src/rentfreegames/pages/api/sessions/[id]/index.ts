@@ -139,9 +139,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         let gameSessions = await getSessionData(id as string);
         let gameSession = gameSessions[0];
 
-        gameSession.games = flattenGames(gameSession.users, gameSession.userGameRatings, userData.id).slice(10)
+        gameSession.games = flattenGames(gameSession.users, gameSession.userGameRatings, userData.id);
         gameSession.users = gameSession.users.map(u => {u.games = []; return u});
-
         const categories = await getCategories(today);
         const mechanics = await getMechanics(today);
 

@@ -85,46 +85,16 @@ export default function SessionSwiping() {
     const { query } = useRouter()
     const { data, error, isLoading, isValidating } = getSession(query?.id as string, guestUser?.id)
 
-    const flattenGames = (users: User[], userId: string, userRatings?: GameRating[]) => {
-        // Flatten list of games
-        let games: Game[] = [];
-        users.forEach(user => {
-            user.games.forEach(game => {
-                game.owned = user.id === userId;
-                game.ownedBy = [{ name: user.name, userId: user.id }];
-                game.rating = 2.5;
-                game.avg_rating = 2.5;
-                if (userRatings) {
-                    const gameRatings = userRatings.filter(r => r.gameId === game.id).map(r => r.rating);
-                    game.rating = userRatings.find(r => r.gameId === game.id && r.userId === userId)?.rating ?? 2.5;
-                    if (gameRatings && gameRatings.length > 0) {
-                        game.avg_rating = Math.round((gameRatings.reduce((r, acc) => acc += r) / gameRatings.length) * 2) / 2 ?? 2.5;
-                    }
-                }
-                games.push(game);
-            });
-        });
 
-        return games;
-    }
-
-    const getUserGames = (users: User[], userId: string, userRatings?: GameRating[]) => {
-        let games = flattenGames(users, userId, userRatings);
-
-        games = mergeGameOwners(games);
-
-        return getUniqueGames(games);
-    }
-
-    const getUserSwipableGames = (users: User[], userId: string, userRatings?: GameRating[], userSwipes?: GameSwipe[]) => {
-        let games = getUserGames(users, userId, userRatings);
+    const getUserSwipableGames = (games: Game[], userId: string, userRatings?: GameRating[], userSwipes?: GameSwipe[]) => {
         if (userSwipes) {
             return games.filter(g => !userSwipes.some(s => s.userId == userId && s.gameId === g.id));
         }
+
         return games;
     }
 
-    const [swipableGames, setSwipableGames] = React.useState(getUserSwipableGames(data?.gameSession?.users, data.sessionUser?.id ?? guestUser.id, data?.gameSession?.userGameRatings, data?.gameSession?.userSwipes));
+    const [swipableGames, setSwipableGames] = React.useState(getUserSwipableGames(data?.gameSession?.games, data.sessionUser?.id ?? guestUser.id, data?.gameSession?.userGameRatings, data?.gameSession?.userSwipes));
     const [currentSwipe, setCurrentSwipe] = React.useState(swipableGames.length > 0 ? swipableGames[0] : null);
     const [swipedGames, setSwipedGames] = React.useState([] as GameSwipe[]);
     const { mutate } = useSWRConfig()
@@ -257,7 +227,7 @@ export default function SessionSwiping() {
                             : <></>
                     }
 
-                    <GameModal games={getUserGames(data?.gameSession?.users, data.sessionUser?.id ?? guestUser.id, data?.gameSession?.userGameRatings)} />
+                    <GameModal games={data?.gameSession?.games} />
                     <Snackbar
                         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
                         open={snackState}

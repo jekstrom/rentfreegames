@@ -131,7 +131,15 @@ function getSwipedGames(games: Game[], userId: string, userRatings?: GameRating[
     if (swipedGames) {
         let matchedGames = swipedGames.filter(s => s.userId === userId && s.swipedRight).map(s => s.gameId);
         matchedGames = swipedGames.filter(s => s.swipedRight && s.userId !== userId && matchedGames.includes(s.gameId)).map(s => s.gameId);
-        games = games.filter(g => matchedGames.includes(g.id));
+        let swipers = {}
+        for (const swipedGame of swipedGames) {
+            swipers[swipedGame.gameId] = swipers[swipedGame.gameId] || 0;
+            if (swipedGame.swipedRight) {
+                swipers[swipedGame.gameId]++;
+            }
+        }
+        
+        games = games.filter(g => matchedGames.includes(g.id)).sort((a,b) => swipers[b.id] - swipers[a.id]).slice(0, 3);
     }
 
     return getUniqueGames(games).sort((a, b) => {
