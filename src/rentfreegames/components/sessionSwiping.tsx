@@ -26,43 +26,6 @@ const postData = async (url: string, data: any) => {
     return json
 }
 
-function mergeGameOwners(games: Game[]): Game[] {
-    for (const game of games) {
-        const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.every(ob => ob.userId !== o.userId)));
-        if (otherGame) {
-            game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
-            otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
-            otherGame.owned = true;
-        }
-    }
-    return games;
-}
-
-const style = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 500,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-};
-
-function getUniqueGames(games: Game[]) {
-    // Unique games by BGGId
-    let uniqueGames = Object.values(
-        games.reduce((acc, obj) => ({ ...acc, [obj.id]: obj }), {})
-    ) as Game[];
-
-    // Remove duplicate owners
-    for (const game of uniqueGames) {
-        game.ownedBy = Object.values(game.ownedBy.reduce((acc, obj) => ({ ...acc, [obj.userId]: obj }), {})) as [Owner];
-    }
-    return uniqueGames;
-}
-
 export default function SessionSwiping() {
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
@@ -184,8 +147,9 @@ export default function SessionSwiping() {
                         timeout: 500,
                     },
                 }}
+                key="games-SessionModal"
             >
-                <Fade in={open}>
+                <Fade in={open} key="fade-in">
                     <Box sx={{
                         position: "absolute",
                         top: fullScreen ? "75%" : "50%",
@@ -198,12 +162,12 @@ export default function SessionSwiping() {
                         overflow: "hidden"
                     }} key="swipable-games">
                         {
-                            games ? games.map((game) => (
+                            games ? games.map((game, index) => (
                                 currentSwipe?.id === game.id && swipableGames.some(g => g.id == game.id)
-                                    ? <GameCard game={game} onDragEnd={onDragEnd} key={game.id} />
+                                    ? <div key="game-swipable"> { games[index+1] && <GameCard game={games[index+1]} onDragEnd={onDragEnd} key={games[index+1].id} /> } <GameCard game={game} onDragEnd={onDragEnd} key={game.id} /> </div>
                                     : <div key={game.id}></div>
                             ))
-                                : <Box sx={{ width: "100%", overflow: "hidden", userSelect: "none", display: "none" }} />
+                                : <Box sx={{ width: "100%", overflow: "hidden", userSelect: "none", display: "none" }} key="no-game" />
                         }
                     </Box>
                 </Fade>
@@ -217,17 +181,17 @@ export default function SessionSwiping() {
                 <>{isExploding && <ConfettiExplosion particleCount={250} />}</>
             </Grid>
             <Grid item xs={12} sm={12} md={12}>
-                <Box sx={{ paddingTop: 1, paddingRight: 1 }}>
+                <Box sx={{ paddingTop: 1, paddingRight: 1 }} key="start-swiping-box">
 
                     {
                         swipableGames.length > 0
-                            ? <Button variant="contained" onClick={handleClickOpen} sx={{ width: "100%", bgcolor: "secondary.main", color: "secondary.contrastText" }}>
+                            ? <Button variant="contained" onClick={handleClickOpen} sx={{ width: "100%", bgcolor: "secondary.main", color: "secondary.contrastText" }} key="start-swiping">
                                 Start Swiping
                             </Button>
                             : <></>
                     }
 
-                    <GameModal games={data?.gameSession?.games} />
+                    <GameModal games={data?.gameSession?.games} key="games-modal" />
                     <Snackbar
                         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
                         open={snackState}

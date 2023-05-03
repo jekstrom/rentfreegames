@@ -15,9 +15,9 @@ export default function SessionSwiping({ game, onDragEnd }: { game: Game, onDrag
       "rgb(0, 0, 255)",
       "rgb(3, 209, 0)"
     ]);
-    const tickPath = useTransform(x, [10, 100], [0, 1]);
-    const crossPathA = useTransform(x, [-10, -55], [0, 1]);
-    const crossPathB = useTransform(x, [-50, -100], [0, 1]);
+    const tickPath = useTransform(x, [10, 50], [0, 1]);
+    const crossPathA = useTransform(x, [-10, -35], [0, 1]);
+    const crossPathB = useTransform(x, [-30, -50], [0, 1]);
     
     return (<Box sx={{ position: "absolute", width: "100%", overflow: "hidden", userSelect: "none" }} key={`box-${game.id}`}>
         <motion.div className="container" style={{ backgroundColor: "transparent" }} key={`container-${game.id}`} >
@@ -43,6 +43,9 @@ export default function SessionSwiping({ game, onDragEnd }: { game: Game, onDrag
                         <Typography sx={{ textShadow: "1px 1px 7px black" }}>{game.name}, <FavoriteIcon sx={{ fontSize: 15, color: tomato }} /> {game.avg_rating}</Typography>
                         <Typography sx={{ fontSize: 12, textShadow: "1px 1px 7px black" }}>{game?.primary_publisher?.name ?? "unknown publisher"}</Typography>
                         <Typography sx={{ fontSize: 12, textShadow: "1px 1px 7px black" }}><PeopleIcon sx={{ fontSize: 15, color: "secondary.main" }} />&nbsp;{game.ownedBy.map(o => o.name).join(", ")}</Typography>
+                        {
+                            window.innerWidth > 600 && <Typography sx={{ fontSize: 12, textShadow: "1px 1px 7px black" }}>{game.description_preview.split('.').slice(0, 4).join(". ")}</Typography>
+                        }
                     </Box>
                     <svg className="progress-icon" viewBox="0 0 50 50">
                         <motion.path
