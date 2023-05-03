@@ -25,7 +25,7 @@ const createCacheClient = async () => {
 }
 
 const buildFieldsQueryString = () => {
-  return "fields=id,name,description,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
+  return "fields=id,name,description_preview,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
 }
 
 export async function getSortedGamesData(id?: string | string[]): Promise<Game[]> {
@@ -75,7 +75,7 @@ export async function getGamesData(id: string | string[]): Promise<Game[]> {
 
     if (!games || games.length === 0) {
       console.log("Fetching from API...");
-      const response = await fetch(`${endpoint}?client_id=${client_id}&ids=${id}`);
+      const response = await fetch(`${endpoint}?client_id=${client_id}&ids=${id}&${buildFieldsQueryString()}`);
       const apiResponse = await response.json() as ApiResponse;
       games = apiResponse.games;
 

@@ -96,7 +96,7 @@ export const getMechanics = async (today: string) => {
 }
 
 const buildFieldsQueryString = () => {
-    return "fields=id,name,description,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
+    return "fields=id,name,description_preview,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
 }
 
 export const buildSearchQuery = (query: string, page: number, pageLength: number, category: string, mechanic: string, players?: string) => {
