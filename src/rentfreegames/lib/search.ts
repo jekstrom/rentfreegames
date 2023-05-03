@@ -96,7 +96,7 @@ export const getMechanics = async (today: string) => {
 }
 
 const buildFieldsQueryString = () => {
-    return "fields=id,name,description_preview,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
+    return "fields=id,name,description,description_preview,images,url,min_players,max_players,playtime,min_playtime,max_playtime,thumb_url,image_url,rank,average_learning_complexity,average_strategy_complexity,categories,mechanics,primary_publisher"
 }
 
 export const buildSearchQuery = (query: string, page: number, pageLength: number, category: string, mechanic: string, players?: string) => {
@@ -149,6 +149,7 @@ export const searchGamesByIds = async (searchQuery: string) => {
                 const response = await fetch(searchQuery);
                 const apiResponse = await response.json() as ApiResponse;
                 games = apiResponse.games;
+                games.forEach(g => g.description = "");
 
                 // Cache games list for 1 day
                 await cache.set(cacheKey, JSON.stringify(apiResponse), { EX: 86400 });
