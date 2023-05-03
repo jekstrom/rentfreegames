@@ -378,20 +378,22 @@ export default function PrimarySearchAppBar() {
                         status === "authenticated" || guestUser?.id
                             ? <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                                 <Grid container>
-                                    <Grid item xs={12} sm={12} container direction="row" sx={{ justifyContent: "right" }}>
+                                    <Grid item xs={12} sm={12} container direction="row" sx={{ alignItems: "center", justifyContent: "right" }}>
                                         <Typography>
                                             {
                                                 userSession?.user?.name ?? guestUser?.name ?? "User"
                                             }
                                         </Typography>
                                     </Grid>
-                                    <Grid item xs={12} sm={12} container direction="row" sx={{ justifyContent: "right" }}>
-                                        <Typography variant='subtitle2' sx={{ color: theme.palette.primary.light }}>
-                                            {
-                                                !userSession?.user?.name ? "Guest" : ""
-                                            }
-                                        </Typography>
-                                    </Grid>
+                                    {
+                                        !userSession?.user?.name && <Grid item xs={12} sm={12} container direction="row" sx={{ justifyContent: "right" }}>
+                                            <Typography variant='subtitle2' sx={{ color: theme.palette.primary.light }}>
+                                                {
+                                                    !userSession?.user?.name ? "Guest" : ""
+                                                }
+                                            </Typography>
+                                        </Grid>
+                                    }
                                 </Grid>
                                 <IconButton
                                     size="large"
