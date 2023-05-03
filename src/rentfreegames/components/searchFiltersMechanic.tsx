@@ -27,7 +27,7 @@ export default function SearchFiltersMechanic({
                 onChange={(event: any, newValue: Mechanic | null) => {
                     setMechanic(newValue);
                 }}
-                sx={{ width: "100%" }}
+                sx={{ width: "100%", bgcolor: "primary.dark", color: "primary.contrastText" }}
                 renderInput={(params) => <TextField {...params} label="Mechanic" />}
             />
         </Box>

@@ -1,5 +1,5 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import { Divider, Grid, IconButton, InputBase, Paper, SelectChangeEvent, Typography } from '@mui/material'
+import { Divider, Grid, IconButton, InputBase, Paper, SelectChangeEvent, Tooltip, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { ReactNode } from 'react'
@@ -48,6 +48,7 @@ export default function SessionDetails() {
     const [owned, setOwned] = React.useState(false)
     const [ratingSort, setRating] = React.useState("none")
     const guestUser = useGuestUserContext();
+    const [open, setOpen] = React.useState(false);
 
     const { query } = useRouter()
     const { data, error, isLoading, isValidating } = getSession(query?.id as string, guestUser?.id)
@@ -86,7 +87,9 @@ export default function SessionDetails() {
     };
 
     const copy = () => {
+        setOpen(true);
         navigator.clipboard.writeText(new URL(`sessions/invite/${data?.gameSession?.inviteId}`, window.location.origin).href);
+        setTimeout(() => setOpen(false), 1500);
     }
 
     return (
@@ -114,7 +117,9 @@ export default function SessionDetails() {
                             />
                             <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
                             <IconButton type="button" color="primary" aria-label="copy" onClick={copy}>
-                                <ContentCopyIcon />
+                                <Tooltip title="Copied" arrow open={open} disableFocusListener disableHoverListener disableTouchListener>
+                                    <ContentCopyIcon />
+                                </Tooltip>
                             </IconButton>
                         </Paper>
                         <Divider sx={{ height: 28, m: 0.5 }} orientation="horizontal" />
@@ -151,7 +156,7 @@ export default function SessionDetails() {
             
             <SessionSwiping />
 
-            <SessionSwipingResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Game Night Swipes"} />
+            <SessionSwipingResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Matches"} />
             
             <GameSessionResults id={query?.id as string} query={queryValue} playerCount={playerCount} mechanic={mechanic} category={category} owned={owned} ratingSort={ratingSort} title={"Games"} />
         </Layout>

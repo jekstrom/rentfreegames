@@ -6,7 +6,7 @@ import { DiscordIcon } from "./customIcons";
 import TextField from '@mui/material/TextField';
 import { useGuestUserContext, useSetGuestUserContext } from '../components/GuestUserContext'
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import { Grid } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -78,9 +78,9 @@ export default function Signin({ redirect }: { redirect?: string }) {
     }
 
     return (
-        <>
-            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
-                <Grid container sx={{ width: "100%" }}>
+        <Box sx={{ display: "flex" }}>
+            <Grid container sx={{ margin: 1, width: { xs: "80vw", md: "40vw", lg: "30vw" } }}>
+                <Grid container item xs={12} sx={{ margin: 1 }}>
                     <Grid item xs={6}>
                         <TextField id="outlined-display-name" label="Name" variant="outlined"
                             onChange={(e) => setDisplayName(e.target.value)}
@@ -92,25 +92,25 @@ export default function Signin({ redirect }: { redirect?: string }) {
                         </Button>
                     </Grid>
                 </Grid>
-            </Stack>
-            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
-                <Divider sx={{ width: "100%" }} />
-            </Stack>
-            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
-                <Button variant="contained" endIcon={<GitHubIcon />} onClick={() => signIn("github")} sx={{ width: "100%" }}>
-                    Sign in using GitHub
-                </Button>
-            </Stack>
-            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
-                <Button variant="contained" endIcon={<DiscordIcon />} onClick={() => signIn("discord")} sx={{ width: "100%" }}>
-                    Sign in using Discord
-                </Button>
-            </Stack>
-            <Stack direction="row" spacing={2} sx={{ m: 2, width: "100%" }}>
-                <Button variant="contained" onClick={() => signIn("azure-ad-b2c")} sx={{ width: "100%" }}>
-                    Sign in with Email
-                </Button>
-            </Stack>
-        </>
+                <Grid item xs={12} sx={{ margin: 1, xs: { width: "100%" }, md: { width: "50%" } }}>
+                    <Divider sx={{ width: "100%" }} />
+                </Grid>
+                <Grid item xs={12} sx={{ margin: 1, xs: { width: "100%" }, md: { width: "50%" } }}>
+                    <Button variant="contained" endIcon={<GitHubIcon />} onClick={() => signIn("github")} sx={{ width: "100%" }}>
+                        Sign in using GitHub
+                    </Button>
+                </Grid>
+                <Grid item xs={12} sx={{ margin: 1, xs: { width: "100%" }, md: { width: "50%" } }}>
+                    <Button variant="contained" endIcon={<DiscordIcon />} onClick={() => signIn("discord")} sx={{ width: "100%" }}>
+                        Sign in using Discord
+                    </Button>
+                </Grid>
+                <Grid item xs={12} sx={{ margin: 1, xs: { width: "100%" }, md: { width: "50%" } }}>
+                    <Button variant="contained" onClick={() => signIn("azure-ad-b2c")} sx={{ width: "100%" }}>
+                        Sign in with Email
+                    </Button>
+                </Grid>
+            </Grid>
+        </Box>
     )
 }

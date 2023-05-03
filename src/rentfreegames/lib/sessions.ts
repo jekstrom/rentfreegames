@@ -32,7 +32,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
         id: crypto.randomUUID(),
         title: title,
         created: new Date().toUTCString(),
-        inviteId: `inv--${nanoid()}`,
+        inviteId: `inv--${nanoid(6)}`,
         createdBy: cleanedUser,
         users: [cleanedUser],
         userGameRatings: [],

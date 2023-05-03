@@ -23,7 +23,7 @@ export default function Search({
           label="Search field"
           type="search"
           value={queryValue}
-          sx={{ color: 'primary.contrastText', p: 0 }}
+          sx={{ color: 'primary.contrastText', bgcolor: "primary.dark", p: 0 }}
           minLength={2}
           maxLength={50}
           debounceTimeout={800}

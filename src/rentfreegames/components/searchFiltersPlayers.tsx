@@ -36,6 +36,7 @@ export default function SearchFiltersPlayers({
                     id="players"
                     value={player}
                     label="Players"
+                    sx={{ bgcolor: "primary.dark", color: "primary.contrastText" }}
                     onChange={setPlayers}
                 >
                     {

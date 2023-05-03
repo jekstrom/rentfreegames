@@ -25,7 +25,7 @@ export default function SearchFiltersCategory({
                 id="category"
                 value={category}
                 onChange={setCategory}
-                sx={{ width: "100%" }}
+                sx={{ width: "100%", bgcolor: "primary.dark", color: "primary.contrastText" }}
                 renderInput={(params) => <TextField {...params} label="Category" />}
             />
         </Box>

@@ -40,6 +40,7 @@ export default function Layout({
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        
         <header className={styles.header}>
           {home ? (
             <>

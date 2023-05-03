@@ -1,30 +1,23 @@
-import Head from 'next/head'
-import Layout, { siteTitle } from '../../components/layout'
-import utilStyles from '../../styles/utils.module.css'
+import Layout from '../../components/layout'
 import { useSession, signIn, signOut } from "next-auth/react"
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import GitHubIcon from '@mui/icons-material/GitHub';
+import { useGuestUserContext } from '../../components/GuestUserContext';
+import Signin from '../../components/signin';
 
 export default function User() {
     const { data: session, status } = useSession()
     const userEmail = session?.user.email
+    const guestUser = useGuestUserContext();
 
     if (status === "loading") {
         return <p>Hang on there...</p>
     }
 
-    if (status === "authenticated") {
+    if (status === "authenticated" || guestUser?.name !== "") {
         return (
             <Layout>
                 <>
-                    <p>Signed in as {userEmail}</p>
-                    {/* Get user content from database */}
-                    <Stack direction="row" spacing={2}>
-                        <Button variant="contained" onClick={() => signOut()}>
-                            Sign out
-                        </Button>
-                    </Stack>
+                    <p>Signed in as {userEmail ?? guestUser?.name}</p>
+                    <Signin />
                 </>
             </Layout>
         )
@@ -33,12 +26,7 @@ export default function User() {
     return (
         <Layout>
             <>
-                <p>Not signed in.</p>
-                <Stack direction="row" spacing={2}>
-                    <Button variant="contained" endIcon={<GitHubIcon />} onClick={() => signIn("github")}>
-                        Sign in using GitHub
-                    </Button>
-                </Stack>
+                <Signin />
             </>
         </Layout>
     )

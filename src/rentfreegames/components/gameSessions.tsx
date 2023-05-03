@@ -1,7 +1,7 @@
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CasinoIcon from '@mui/icons-material/Casino';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
+import { MeepleIcon } from "./customIcons"
 import { Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
@@ -78,7 +78,7 @@ export default function UserGameSessions() {
                                             </Grid>
                                             <Grid item xs={12} sm={12} md={4}>
                                                 <Typography variant="body2" component="p">
-                                                    <CasinoIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp; {session.users.map(u => u.games.length).reduce((count, sum) => sum += count)} games
+                                                    <MeepleIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp; {session.users.map(u => u.games.length).reduce((count, sum) => sum += count)} games
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={12} sm={12} md={4}>
