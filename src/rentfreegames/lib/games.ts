@@ -64,7 +64,7 @@ export async function getGamesData(id: string | string[]): Promise<Game[]> {
   const cache = await createCacheClient();
   try {
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const cacheKey = `gameslist:${today}:${id}`;
+    const cacheKey = `gameslist:${today}:id:${id}`;
 
 
     const cacheResponse = await cache.get(cacheKey);
