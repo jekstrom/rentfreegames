@@ -98,7 +98,7 @@ export default function SessionSwiping() {
 
         await mutate(url, {
             ...data,
-           gameSession: {...data.gameSession, userSwipes: [...data.gameSession.userSwipes, ...swipedGames]}
+           gameSession: {...data.gameSession, userSwipes: [...data.gameSession.userSwipes ?? [], ...swipedGames]}
         }, { revalidate: false });
 
         await postData(`/api/sessions/${data.gameSession.id}/user/${data.sessionUser?.id ?? guestUser.id}`, { swipedGames });

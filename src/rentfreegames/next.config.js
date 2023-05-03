@@ -17,6 +17,11 @@ module.exports = {
           hostname: 'cdn.shopify.com',
           pathname: '/**',
           protocol: 'https'
+        },
+        {
+          hostname: 'boardgamesupply.com.au',
+          pathname: '/**',
+          protocol: 'https'
         }
       ],
     },
