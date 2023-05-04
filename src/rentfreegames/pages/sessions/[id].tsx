@@ -166,9 +166,7 @@ export default function SessionDetails() {
             </Head>
             <article>
                 <h1 className={utilStyles.headingXl}>
-                    {
-                        data?.gameSession?.createdBy?.id === data?.sessionUser?.id && <IconButton onClick={() => setDetails(!details)}> <MenuIcon /> </IconButton>
-                    } 
+                    <IconButton onClick={() => setDetails(!details)}> <MenuIcon /> </IconButton>
                     &nbsp;{data.gameSession.title}
                 </h1>
             </article>
