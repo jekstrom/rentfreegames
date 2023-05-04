@@ -2,6 +2,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
 import { MeepleIcon } from "./customIcons"
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import Link from '@mui/material/Link';
@@ -12,6 +13,7 @@ import * as React from 'react';
 import useSWR from 'swr';
 import { ResponseError, Session } from '../interfaces';
 import { useGuestUserContext } from './GuestUserContext'
+import dayjs, { Dayjs } from 'dayjs';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -65,11 +67,34 @@ export default function UserGameSessions() {
                                                     <Link href={`/sessions/${session.id}${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`} sx={{ color: "secondary.light" }}>{session.title}</Link>
                                                 </Typography>
                                                 <Typography variant="caption" component="p" sx={{ color: "primary.light" }}>
-                                                    <Tooltip title={new Date(session.created).toLocaleString()} placement="top">
+                                                    <Tooltip title={new Date(session.startDate?.toString() ?? session.created).toLocaleString()} placement="top">
                                                         <AccessTimeIcon sx={{ color: "primary.main", fontSize: 16 }} />
                                                     </Tooltip>
-                                                    &nbsp;Started {new Date(session.created).toLocaleDateString()}
+                                                    &nbsp;
+                                                    {
+                                                        session.startDate && dayjs(session.startDate)?.isAfter(new Date()) 
+                                                        ? "Starting"
+                                                        : "Started"
+                                                    }
+                                                    &nbsp;{new Date(session.startDate?.toString() ?? session.created).toLocaleDateString()}&nbsp;
+                                                    
+                                                    <AccessTimeIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp;
+                                                    {
+                                                        session.expireDate && dayjs(session.expireDate)?.isAfter(new Date()) 
+                                                        ? "Ending"
+                                                        : "Ended"
+                                                    }
+                                                    {
+                                                        session.expireDate && <>
+                                                        &nbsp;{new Date(session.expireDate?.toString()).toLocaleDateString()}</>
+                                                    }
+
+                                                    {
+                                                        session.location && <>&nbsp;<LocationOnIcon sx={{ color: "primary.main", fontSize: 16 }} />
+                                                        &nbsp;{session.location}</>
+                                                    }
                                                 </Typography>
+                                                
                                             </Grid>
                                             <Grid item xs={12} sm={12} md={4}>
                                                 <Typography variant="body2" component="p">

@@ -1,9 +1,9 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import { Divider, Grid, IconButton, InputBase, Paper, SelectChangeEvent, Tooltip, Typography } from '@mui/material'
+import { Divider, Grid, IconButton, InputBase, Paper, SelectChangeEvent, TextField, Tooltip, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { ReactNode } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import { useGuestUserContext } from '../../components/GuestUserContext'
 import GameSessionResults from '../../components/gameSessionResults'
 import Layout from '../../components/layout'
@@ -18,8 +18,25 @@ import SessionSwiping from '../../components/sessionSwiping'
 import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 import SessionSwipingResults from '../../components/sessionSwipingResults'
+import MenuIcon from '@mui/icons-material/Menu';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs'
+import { DebounceInput } from 'react-debounce-input'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+const patchData = async (url: string, data: any) => {
+    const response = await fetch(url, {
+        method: 'PATCH',
+        mode: 'cors',
+        body: JSON.stringify(data)
+    });
+
+    const json = await response.json();
+    return json
+}
+
 
 export function getSession(id: string, guestId?: string) {
     let url = (id ? `/api/sessions/${id}` : null)
@@ -49,10 +66,12 @@ export default function SessionDetails() {
     const [ratingSort, setRating] = React.useState("none")
     const guestUser = useGuestUserContext();
     const [open, setOpen] = React.useState(false);
-
+    const [details, setDetails] = React.useState(true);
+    
     const { query } = useRouter()
     const { data, error, isLoading, isValidating } = getSession(query?.id as string, guestUser?.id)
-
+    const { mutate } = useSWRConfig()
+    
     if (error) {
         console.log("Failed to load session");
         return <Layout><div>Failed to load</div></Layout>
@@ -92,14 +111,107 @@ export default function SessionDetails() {
         setTimeout(() => setOpen(false), 1500);
     }
 
+    const updateStartDate = async (date: dayjs.Dayjs) => {
+        if (data?.gameSession?.createdBy?.id === data?.sessionUser?.id) {
+            let url = `/api/sessions/${data.gameSession.id}`
+            if (guestUser?.id) {
+                url += `?guestId=${guestUser.id}`;
+            }
+
+            await mutate(url, {
+                ...data,
+            gameSession: {...data.gameSession, startDate: date}
+            }, { revalidate: false });
+
+            await patchData(url, { startDate: date });
+        }
+    }
+
+    const updateEndDate = async (date: dayjs.Dayjs) => {
+        if (data?.gameSession?.createdBy?.id === data?.sessionUser?.id) {
+            let url = `/api/sessions/${data.gameSession.id}`
+            if (guestUser?.id) {
+                url += `?guestId=${guestUser.id}`;
+            }
+
+            await mutate(url, {
+                ...data,
+            gameSession: {...data.gameSession, expireDate: date}
+            }, { revalidate: false });
+
+            await patchData(url, { endDate: date });
+        }
+    }
+
+    const updateLocation = async (location: string) => {
+        if (data?.gameSession?.createdBy?.id === data?.sessionUser?.id) {
+            let url = `/api/sessions/${data.gameSession.id}`
+            if (guestUser?.id) {
+                url += `?guestId=${guestUser.id}`;
+            }
+
+            await mutate(url, {
+                ...data,
+            gameSession: {...data.gameSession, location: location}
+            }, { revalidate: false });
+
+            await patchData(url, { location });
+        }
+    }
+
     return (
         <Layout>
             <Head>
                 <title>{data?.gameSession?.title} - RFG</title>
             </Head>
             <article>
-                <h1 className={utilStyles.headingXl}>{data.gameSession.title}</h1>
+                <h1 className={utilStyles.headingXl}>
+                    {
+                        data?.gameSession?.createdBy?.id === data?.sessionUser?.id && <IconButton onClick={() => setDetails(!details)}> <MenuIcon /> </IconButton>
+                    } 
+                    &nbsp;{data.gameSession.title}
+                </h1>
             </article>
+            {
+                details && <Paper sx={{ padding: 2, marginBottom: 2 }}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} sm={12} md={6}>
+                            <Typography align="justify" gutterBottom>
+                                Start date
+                            </Typography>
+                            <DatePicker disablePast readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} maxDate={dayjs(data?.gameSession?.expireDate) ?? null} value={dayjs(data?.gameSession.startDate) ?? null} onChange={async (event) => await updateStartDate(event)}  />
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={6}>
+                            <Typography align="justify" gutterBottom>
+                                End date
+                            </Typography>
+                            <DatePicker disablePast readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} minDate={dayjs(data?.gameSession.startDate) ?? null} maxDate={dayjs(new Date(new Date().getTime() + 60 * 24 * 60 * 60 * 1000))} value={dayjs(data?.gameSession?.expireDate) ?? null} onChange={updateEndDate} />
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={12}>
+                            <Paper
+                                elevation={5}
+                                sx={{ p: '2px 4px', display: 'flex', alignItems: 'center' }}
+                            >
+                                <DebounceInput
+                                    element={InputBase}
+                                    id="outlined-location"
+                                    type="input"
+                                    value={data?.gameSession?.location ?? ""}
+                                    sx={{ flex: 1, padding: 1, border: 0 }}
+                                    debounceTimeout={800}
+                                    readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id}
+                                    onChange={(e) => updateLocation(e.target.value)} />
+                                <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+                                <Tooltip title="Go to Google Maps" arrow>
+                                    <IconButton type="button" color="primary" aria-label="location" onClick={() => window.open("https://maps.google.com", "_blank")}>
+                                        <LocationOnIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Paper>
+                        </Grid>
+                    </Grid>
+                </Paper>
+            }
             {
                 data?.gameSession?.createdBy?.id === data?.sessionUser?.id
                     ? <section className={utilStyles.headingMd}>

@@ -3,6 +3,8 @@ import { AppProps } from 'next/app'
 import { SessionProvider } from "next-auth/react"
 import { GuestUserProvider } from '../components/GuestUserContext'
 import MenuAppBar from '../components/navBar'
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 
 export default function App({
   Component,
@@ -11,8 +13,10 @@ export default function App({
   return (
     <SessionProvider session={session}>
       <GuestUserProvider>
-        <MenuAppBar />
-        <Component {...pageProps} />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <MenuAppBar />
+          <Component {...pageProps} />
+        </LocalizationProvider>
       </GuestUserProvider>
     </SessionProvider>
   )

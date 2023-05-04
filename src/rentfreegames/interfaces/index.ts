@@ -1,3 +1,5 @@
+import dayjs, { Dayjs } from 'dayjs';
+
 export type ResponseError = {
     message: string
 }
@@ -175,7 +177,10 @@ export interface Session {
     createdBy: User | GuestUser,
     games?: Game[],
     userGameRatings?: GameRating[],
-    userSwipes?: GameSwipe[]
+    userSwipes?: GameSwipe[],
+    expireDate?: dayjs.Dayjs,
+    startDate?: dayjs.Dayjs,
+    location?: string
 }
 
 export interface GameRating {

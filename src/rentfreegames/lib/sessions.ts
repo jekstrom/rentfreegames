@@ -2,6 +2,7 @@ import { CosmosClient } from '@azure/cosmos';
 import { GameSwipe, GuestUser, Session, User } from '../interfaces';
 import { nanoid } from 'nanoid/non-secure';
 import * as crypto from 'crypto';
+import dayjs, { Dayjs } from 'dayjs';
 
 const endpoint = process.env.DB_ENDPOINT;
 const key = process.env.DB_KEY;
@@ -27,13 +28,17 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
 
   try {
     const cleanedUser = cleanUser(user);
+    var today = new Date();
     const result = await container.items.create(
       {
         id: crypto.randomUUID(),
         title: title,
-        created: new Date().toUTCString(),
+        created: today.toUTCString(),
         inviteId: `inv--${nanoid(6)}`,
         createdBy: cleanedUser,
+        startDate: dayjs(today),
+        expireDate: dayjs(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)), // One week in future
+        location: "",
         users: [cleanedUser],
         userGameRatings: [],
         userSwipes: []
@@ -53,6 +58,9 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
       created: new Date(result.resource.created),
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
+      startDate: dayjs(result.resource.startDate),
+      expireDate: dayjs(result.resource.expireDate),
+      location: result.resource.location,
       users: result.resource.users,
       userGameRatings: result.resource.userGameRatings,
       userSwipes: result.resource.userSwipes
@@ -82,6 +90,9 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
         created: existingSession.created,
         inviteId: existingSession.inviteId,
         createdBy: existingSession.createdBy,
+        startDate: dayjs(existingSession.startDate),
+        expireDate: dayjs(existingSession.expireDate),
+        location: existingSession.location,
         users: [...existingSession.users, user],
         userGameRatings: existingSession.userGameRatings,
         userSwipes: existingSession.userSwipes
@@ -100,6 +111,9 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
       created: new Date(result.resource.created),
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
+      startDate: dayjs(result.resource.startDate),
+      expireDate: dayjs(result.resource.expireDate),
+      location: result.resource.location,
       users: result.resource.users,
       userGameRatings: result.resource.userGameRatings,
       userSwipes: result.resource.userSwipes
@@ -129,6 +143,9 @@ export async function updateUserSwipes(sessionId: string, swipedGames: GameSwipe
         created: existingSession.created,
         inviteId: existingSession.inviteId,
         createdBy: existingSession.createdBy,
+        startDate: dayjs(existingSession.startDate),
+        expireDate: dayjs(existingSession.expireDate),
+        location: existingSession.location,
         users: existingSession.users,
         userGameRatings: existingSession.userGameRatings,
         userSwipes: existingSession.userSwipes
@@ -147,6 +164,9 @@ export async function updateUserSwipes(sessionId: string, swipedGames: GameSwipe
       created: new Date(result.resource.created),
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
+      startDate: dayjs(result.resource.startDate),
+      expireDate: dayjs(result.resource.expireDate),
+      location: result.resource.location,
       users: result.resource.users,
       userGameRatings: result.resource.userGameRatings,
       userSwipes: result.resource.userSwipes
@@ -199,12 +219,15 @@ export async function getUserSessionsData(id?: string): Promise<Session[]> {
   const { container } = await database.containers.createIfNotExists(CONTAINER);
 
   if (id) {
+    const today = new Date();
+    const tomorrow = dayjs(new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000))
     const { resources } = await container.items
       .query({
         query: "SELECT c FROM c \
         JOIN users in c.users \
-        WHERE users.id = @id",
-        parameters: [{ name: "@id", value: id }]
+        WHERE users.id = @id \
+        AND c.expireDate >= @today",
+        parameters: [{ name: "@id", value: id }, { name: "@today", value: tomorrow.format("YYYY-MM-DD") }]
       })
       .fetchAll();
 
@@ -248,6 +271,9 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
             created: gameSession.created,
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
+            startDate: dayjs(gameSession.startDate),
+            expireDate: dayjs(gameSession.expireDate),
+            location: gameSession.location,
             users: gameSession.users,
             userGameRatings: gameSession.userGameRatings,
             userSwipes: gameSession.userSwipes
@@ -278,6 +304,9 @@ export async function updateSession(gameSession: Session): Promise<Session> {
         created: gameSession.created,
         inviteId: gameSession.inviteId,
         createdBy: gameSession.createdBy,
+        startDate: dayjs(gameSession.startDate),
+        expireDate: dayjs(gameSession.expireDate),
+        location: gameSession.location,
         users: gameSession.users,
         userGameRatings: gameSession.userGameRatings,
         userSwipes: gameSession.userSwipes
@@ -328,6 +357,9 @@ export async function updateUserGameSession(sessionId: string, user: User): Prom
             created: gameSession.created,
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
+            startDate: dayjs(gameSession.startDate),
+            expireDate: dayjs(gameSession.expireDate),
+            location: gameSession.location,
             users: gameSession.users,
             userGameRatings: gameSession.userGameRatings,
             userSwipes: gameSession.userSwipes

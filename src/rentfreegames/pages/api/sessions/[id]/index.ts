@@ -5,6 +5,7 @@ import { getSessionData, updateSession } from '../../../../lib/sessions'
 import { getCategories, getMechanics } from '../../../../lib/search'
 import { getUserData, getGuestUserData } from '../../../../lib/users'
 import { User, GuestUser, Game, GameRating, Owner } from '../../../../interfaces'
+import dayjs, { Dayjs } from 'dayjs';
 
 function cleanUser(user: User) {
     if (!user) {
@@ -111,13 +112,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const gameSessions = await getSessionData(id as string);
         const gameSession = gameSessions[0];
 
-        // Logic to restrict to only registered users, no guests
-        // if (!gameSession.users.some(u => u.id == userData.id)) {
-        //     console.log(`User ${userData.id} not found in session ${id}.`);
-        //     res.status(404).json({ message: "User not found in session." });
-        //     return;
-        // }
-
         gameSession.userGameRatings = gameSession.userGameRatings || [];
         if (!gameSession.userGameRatings.some(u => u.userId == userData.id && u.gameId == payload.gameId)) {
             gameSession.userGameRatings.push({ userId: userData.id, gameId: payload.gameId, rating: payload.rating });
@@ -129,6 +123,47 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         });
 
         console.log("Updating user game session...", JSON.stringify(gameSession.userGameRatings));
+
+        const newSession = await updateSession(gameSession);
+
+        return res.json(newSession);
+    } if (req.method === "PATCH") {
+        // Update details
+        const payload = JSON.parse(req.body);
+        
+        if (!payload.startDate && !payload.endDate && !payload.location) {
+            res.status(400).json({ message: "Missing details." });
+            return;
+        }
+
+        
+        const gameSessions = await getSessionData(id as string);
+        const gameSession = gameSessions[0];
+        
+        if (userData.id !== gameSession.createdBy.id) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+
+        if (payload.startDate) {
+            const newStartDate = dayjs(new Date(Date.parse(payload.startDate)));
+            if (gameSession.expireDate && newStartDate.isAfter(gameSession.expireDate)) {
+                res.status(400).json({ message: "Start date cannot be after end date" });
+                return;
+            }
+            gameSession.startDate = newStartDate;
+        }
+        if (payload.endDate) {
+            const newEndDate = dayjs(new Date(Date.parse(payload.endDate)));
+            if (gameSession.startDate && newEndDate.isBefore(gameSession.startDate)) {
+                res.status(400).json({ message: "End date cannot be before start date" });
+                return;
+            }
+            gameSession.expireDate = newEndDate;
+        }
+        if (payload.location && payload.location.length > 0) {
+            gameSession.location = payload.location;
+        }
 
         const newSession = await updateSession(gameSession);
 
