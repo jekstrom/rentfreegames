@@ -175,13 +175,13 @@ export default function SessionDetails() {
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={12} md={6}>
                             <Typography align="justify" gutterBottom>
-                                Start date
+                                Date of the event
                             </Typography>
                             <DatePicker disablePast readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} maxDate={dayjs(data?.gameSession?.expireDate) ?? null} value={dayjs(data?.gameSession.startDate) ?? null} onChange={async (event) => await updateStartDate(event)}  />
                         </Grid>
                         <Grid item xs={12} sm={12} md={6}>
                             <Typography align="justify" gutterBottom>
-                                End date
+                                Expire date
                             </Typography>
                             <DatePicker disablePast readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} minDate={dayjs(data?.gameSession.startDate) ?? null} maxDate={dayjs(new Date(new Date().getTime() + 60 * 24 * 60 * 60 * 1000))} value={dayjs(data?.gameSession?.expireDate) ?? null} onChange={updateEndDate} />
                         </Grid>

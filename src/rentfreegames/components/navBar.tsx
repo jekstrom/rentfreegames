@@ -4,6 +4,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import MenuIcon from '@mui/icons-material/Menu';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import { MeepleIcon } from './customIcons'
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PersonIcon from '@mui/icons-material/Person';
 import { Avatar, Divider, Grid, Link, Paper, Tooltip } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
@@ -25,6 +26,7 @@ import { Session } from '../interfaces';
 import { theme } from '../styles/theme';
 import utilStyles from '../styles/utils.module.css';
 import { useGuestUserContext, useSetGuestUserContext } from './GuestUserContext';
+import dayjs, { Dayjs } from 'dayjs';
 
 function stringToColor(string: string) {
     let hash = 0;
@@ -176,23 +178,47 @@ export default function PrimarySearchAppBar() {
                                     <Link href={`/sessions/${session.id}${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`} sx={{ color: theme.palette.secondary.light }}>{session.title}</Link>
                                 </Typography>
                                 <Typography variant="caption" component="p" sx={{ color: "primary.light" }}>
-                                    <Tooltip title={new Date(session.created).toLocaleString()} placement="top">
-                                        <AccessTimeIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
-                                    </Tooltip>
-                                    &nbsp;Started {new Date(session.created).toLocaleDateString()}
+                                    <Grid container>
+                                        <Grid item xs={12} sm={12} md={6}>
+                                            <AccessTimeIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
+                                            &nbsp;
+                                            {
+                                                session.startDate && dayjs(session.startDate)?.isAfter(new Date()) 
+                                                ? "Starting"
+                                                : "Started"
+                                            }
+                                            &nbsp;{new Date(session.startDate?.toString() ?? session.created).toLocaleDateString()}&nbsp;
+                                        </Grid>
+                                        
+                                        <Grid item xs={12} sm={12} md={6}>
+                                            <AccessTimeIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp;
+                                            {
+                                                session.expireDate && dayjs(session.expireDate)?.isAfter(new Date()) 
+                                                ? "Ending"
+                                                : "Ended"
+                                            }
+                                            {
+                                                session.expireDate && <>
+                                                &nbsp;{new Date(session.expireDate?.toString()).toLocaleDateString()}</>
+                                            }
+                                        </Grid>
+
+                                        <Grid item xs={12} sm={12} md={12}>
+                                            {
+                                                session.location && <><LocationOnIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
+                                                &nbsp;{session.location}</>
+                                            }
+                                        </Grid>
+                                    </Grid>
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={12} md={4}>
+                            <Grid item xs={12} sm={12} md={6}>
                                 <Typography variant="body2" component="p">
                                     <GroupIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp; {session.users.length} players
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={12} md={4}>
-                                <Typography variant="body2" component="p">
-                                    <MeepleIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp; {session.users.map(u => u.games.length).reduce((count, sum) => sum += count)} games
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={12} md={4}>
+                            
+                            <Grid item xs={12} sm={12} md={6}>
                                 <Typography variant="body2" component="p">
                                     <PersonIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
                                     &nbsp;Hosted by&nbsp;
@@ -201,6 +227,12 @@ export default function PrimarySearchAppBar() {
                                             ? "you"
                                             : session.createdBy.name
                                     }
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={12} sm={12} md={12}>
+                                <Typography variant="body2" component="p">
+                                    <MeepleIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp; {session.users.map(u => u.games.length).reduce((count, sum) => sum += count)} games
                                 </Typography>
                             </Grid>
                         </Grid>
