@@ -3,7 +3,7 @@ import Layout from '../../components/layout'
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useGuestUserContext } from '../../components/GuestUserContext';
 import Signin from '../../components/signin';
-import { Button } from '@mui/material';
+import { Button, Grid } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadIcon from '@mui/icons-material/Upload';
 import AvatarEditor from 'react-avatar-editor'
@@ -91,7 +91,7 @@ export default function UserProfile() {
                         }
                         await mutate(url, {
                             ...data,
-                            user: {...data.user, image: response.imageUrl}
+                            user: { ...data.user, image: response.imageUrl }
                         }, { revalidate: true });
                     });
                 } else {
@@ -105,67 +105,78 @@ export default function UserProfile() {
     if (status === "authenticated" || guestUser?.name !== "") {
         return (
             <Layout>
-                <>
-                    <p>Signed in as {userEmail ?? guestUser?.name}</p>
-                    <Signin />
-                    <br />
-                    {
-                        showSizeWarning && (
-                            <p style={{ color: "red" }}>Image size is too large. Please upload an image less than 3MB.</p>
-                        )
-                    }
-                    {selectedImage && (
-                        <div>
-                        <AvatarEditor
-                            image={URL.createObjectURL(selectedImage as any)}
-                            ref={editor}
-                            width={128}
-                            height={128}
-                            border={20}
-                            borderRadius={128}
-                            color={[1, 20, 30, 0.7]} // RGBA
-                            scale={1.5}
-                            rotate={0}
-                        />
-                            <Button variant="contained" onClick={() => {setSelectedImage(null); setShowSizeWarning(false);}}>Remove</Button>
-                            <br/>
-                            { !showSizeWarning && <Button variant="contained" onClick={saveCroppedImage}>Save</Button> }
-                        </div>
-                    )}
-                    <br />
-                    <input
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        id="raised-button-file"
-                        multiple
-                        type="file"
-                        onChange={(e) => {
-                            if (e.target.files) {
-                                setSelectedImage(e.target.files[0] as any);
-                                if (e.target.files[0].size > 3145728) {
-                                    setShowSizeWarning(true);
-                                } else {
-                                    setShowSizeWarning(false);
-                                }
-                            }
-                        }}
-                        />
-                        <label htmlFor="raised-button-file">
-                        <Button 
-                            variant="contained" 
-                            sx={{ bgcolor: "secondary.main", color: "secondary.contrastText", height: "100%" }} 
-                            endIcon={<UploadIcon sx={{ color: "secondary.light" }} />}
-                            component="span">
-                            Upload avatar image
+                <Grid container spacing={2} columns={{ xs: 12, sm: 12, md: 12 }}>
+                    <Grid item xs={12}>
+                        <p>Signed in as {userEmail ?? guestUser?.name}</p>
+                        <Signin />
+                    </Grid>
+                    <Grid item xs={12}>
+                        {
+                            showSizeWarning && (
+                                <p style={{ color: "red" }}>Image size is too large. Please upload an image less than 3MB.</p>
+                            )
+                        }
+                        {
+                            selectedImage && (
+                            <Grid container spacing={1} sx={{ padding: 2 }}>
+                                <Grid item xs={12}>
+                                    <AvatarEditor
+                                        image={URL.createObjectURL(selectedImage as any)}
+                                        ref={editor}
+                                        width={128}
+                                        height={128}
+                                        border={20}
+                                        borderRadius={128}
+                                        color={[1, 20, 30, 0.7]} // RGBA
+                                        scale={1.5}
+                                        rotate={0}
+                                    />
+                                </Grid>
+                                <Grid item  xs={3}>
+                                    <Button variant="contained" onClick={() => { setSelectedImage(null); setShowSizeWarning(false); }}>Remove</Button>
+                                </Grid>
+                                <Grid item  xs={3}>
+                                    {!showSizeWarning && <Button variant="contained" onClick={saveCroppedImage}>Save</Button>}
+                                </Grid>
+                            </Grid>
+                        )}
+                        <Grid container spacing={1} sx={{ padding: 2 }}>
+                            <Grid item>
+                                <input
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id="raised-button-file"
+                                    multiple
+                                    type="file"
+                                    onChange={(e) => {
+                                        if (e.target.files) {
+                                            setSelectedImage(e.target.files[0] as any);
+                                            if (e.target.files[0].size > 3145728) {
+                                                setShowSizeWarning(true);
+                                            } else {
+                                                setShowSizeWarning(false);
+                                            }
+                                        }
+                                    }}
+                                />
+                                <label htmlFor="raised-button-file">
+                                    <Button
+                                        variant="contained"
+                                        sx={{ bgcolor: "secondary.main", color: "secondary.contrastText", height: "100%" }}
+                                        endIcon={<UploadIcon sx={{ color: "secondary.light" }} />}
+                                        component="span">
+                                        Upload avatar image
+                                    </Button>
+                                </label>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Button variant="contained" endIcon={<DeleteIcon sx={{ color: "secondary.light" }} />} onClick={() => deleteUserGames()} sx={{ bgcolor: "secondary.main", color: "secondary.contrastText", height: "100%" }}>
+                            Reset game collection
                         </Button>
-                        </label> 
-                    <br />
-                    <br />
-                    <Button variant="contained" endIcon={<DeleteIcon sx={{ color: "secondary.light" }} />} onClick={() => deleteUserGames()} sx={{ bgcolor: "secondary.main", color: "secondary.contrastText", height: "100%" }}>
-                        Reset game collection
-                    </Button>
-                    <br />
-                </>
+                    </Grid>
+                </Grid>
             </Layout>
         )
     }
