@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { CosmosClient } from '@azure/cosmos'
 import { Profile } from 'next-auth';
-import { User, Game, GuestUser } from '../interfaces';
+import { User, Game, GuestUser, GameRating } from '../interfaces';
 import { JWT } from 'next-auth/jwt';
 import * as crypto from 'crypto';
 import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob';
@@ -93,6 +93,25 @@ export async function getGuestUserMetaData(id: string): Promise<User> {
     return null;
 }
 
+export async function getAverageGameRatings(): Promise<GameRating[]> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+
+    const { resources } = await container.items
+        .query({
+            query: "SELECT gameRating.gameId, AVG(gameRating.rating) AS rating FROM c \
+            JOIN gameRating IN c.gameRatings \
+            GROUP BY gameRating.gameId"
+        })
+        .fetchAll();
+
+    if (resources && resources.length > 0) {
+        return resources.map(r => r as GameRating);
+    }
+
+    return null;
+}
+
 export async function postUserData(profile: Profile): Promise<User> {
     const { database } = await client.databases.createIfNotExists({ id: "User Database" });
     const { container } = await database.containers.createIfNotExists({ id: "User Container" });
@@ -106,7 +125,8 @@ export async function postUserData(profile: Profile): Promise<User> {
                 name: profile.name,
                 sub: profile.sub,
                 isGuest: true,
-                games: []
+                games: [],
+                gameRatings: []
             }
         );
 
@@ -122,7 +142,8 @@ export async function postUserData(profile: Profile): Promise<User> {
             image: result.resource.image,
             name: result.resource.name,
             sub: result.resource.sub,
-            games: []
+            games: [],
+            gameRatings: []
         };
     }
     catch (ex) {
@@ -143,7 +164,8 @@ export async function postGuestUserData(guestUser: GuestUser): Promise<GuestUser
                 name: guestUser.name,
                 sub: '',
                 games: [],
-                isGuest: true
+                isGuest: true,
+                gameRatings: []
             }
         );
 
@@ -160,7 +182,8 @@ export async function postGuestUserData(guestUser: GuestUser): Promise<GuestUser
             name: result.resource.name,
             sub: result.resource.sub,
             isGuest: true,
-            games: []
+            games: [],
+            gameRatings: []
         };
     }
     catch (ex) {
@@ -180,7 +203,8 @@ export async function postJWTUserData(profile: JWT): Promise<User> {
                 image: profile.picture,
                 name: profile.name,
                 sub: profile.sub,
-                games: []
+                games: [],
+                gameRatings: []
             }
         );
 
@@ -196,7 +220,8 @@ export async function postJWTUserData(profile: JWT): Promise<User> {
             image: result.resource.image,
             name: result.resource.name,
             sub: result.resource.sub,
-            games: []
+            games: [],
+            gameRatings: []
         };
     }
     catch (ex) {
@@ -248,6 +273,55 @@ export async function addGame(id: string, game: Game): Promise<User> {
     }
     catch (ex) {
         console.log("Exception addGame: ", ex);
+    }
+}
+
+export async function addGameRatings(id: string, gameRatings: GameRating[]): Promise<User> {
+    const { database } = await client.databases.createIfNotExists({ id: "User Database" });
+    const { container } = await database.containers.createIfNotExists({ id: "User Container" });
+
+    const { resources } = await container.items
+        .query({
+            query: "SELECT * from u WHERE u.id = @id",
+            parameters: [{ name: "@id", value: id }]
+        })
+        .fetchAll();
+
+    const user = resources.find((u) => u.id === id) as User;
+
+    try {
+        console.log("Existing ratings: ", user.gameRatings)
+        console.log("New ratings: ", gameRatings);
+
+        user.gameRatings = user.gameRatings || [];
+        user.gameRatings = user.gameRatings.filter(s => gameRatings.some(gr => s.gameId !== gr.gameId));
+        user.gameRatings = [...user.gameRatings, ...gameRatings];
+
+        console.log("Adding game ratings: ", user.gameRatings)
+
+        const result = await container.items.upsert(
+            {
+                id: user.id,
+                email: resources[0].email,
+                image: user.image,
+                name: user.name,
+                sub: user.sub,
+                games: user.games,
+                isGuest: user.isGuest,
+                gameRatings: user.gameRatings
+            }
+        );
+
+        if (result.statusCode >= 400) {
+            console.log(result.statusCode);
+            console.log(result.substatus);
+            return null;
+        }
+
+        return user;
+    }
+    catch (ex) {
+        console.log("Exception addGameRatings: ", ex);
     }
 }
 

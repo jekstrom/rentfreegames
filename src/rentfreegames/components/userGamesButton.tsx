@@ -8,6 +8,7 @@ import * as React from 'react';
 import useSWR from 'swr';
 import { ResponseError, User } from '../interfaces';
 import { useGuestUserContext } from './GuestUserContext';
+import { MeepleIcon } from './customIcons'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -61,7 +62,7 @@ export default function UserGames() {
             {
                 (status === "authenticated" || guestUser?.id) && data && data.user.games?.length > 0
                     ? <Grid item>
-                        <Button onClick={myGames}><ForwardIcon sx={{ marginRight: 1, color: "secondary.light" }} /> My games ({data.user.games?.length ?? 0})</Button>
+                        <Button onClick={myGames}><MeepleIcon sx={{ marginRight: 1, color: "secondary.light" }} /> My games ({data.user.games?.length ?? 0})</Button>
                     </Grid>
                     : <></>
             }

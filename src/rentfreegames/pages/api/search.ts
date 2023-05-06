@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from './auth/[...nextauth]'
-import { getGuestUserData, getUserData } from '../../lib/users'
-import { Game, GuestUser, User } from '../../interfaces'
+import { getGuestUserData, getUserData, getAverageGameRatings } from '../../lib/users'
+import { Game, GameRating, GuestUser, User } from '../../interfaces'
 import * as redis from 'redis'
 import { getCategories, getMechanics, getSearchTitle, buildSearchQuery, ApiResponse } from '../../lib/search'
 
@@ -120,6 +120,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             }
         }
 
+        let userGameRatings = [] as GameRating[];
+        let avgUserGameRatings = [] as GameRating[];
         if (session?.user?.email || guestId) {
             let userData = cleanUser(await getUserData(session?.user?.email));
             if (!userData) {
@@ -130,11 +132,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
                 return game;
             });
+
+            userGameRatings = userData.gameRatings;
+
+            avgUserGameRatings = await getAverageGameRatings();
         }
 
-
         return games
-            ? res.status(200).json({ games, categories, mechanics, totalPages: Math.floor(Math.min(totalPages, 1000 / pageLength)), title })
+            ? res.status(200).json({ games, categories, mechanics, totalPages: Math.floor(Math.min(totalPages, 1000 / pageLength)), title, userGameRatings, avgUserGameRatings})
             : res.status(404).json({ message: `Games with query ${q} not found.` })
     }
 

@@ -11,7 +11,7 @@ import SearchFiltersCategory from '../../components/searchFiltersCategory'
 import SearchFiltersMechanic from '../../components/searchFiltersMechanic'
 import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchFiltersOwned from '../../components/searchFiltersOwned'
-import { Category, Game, GuestUser, Mechanic } from '../../interfaces'
+import { Category, Game, GuestUser, Mechanic, GameRating } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 import { useRouter } from 'next/router'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -30,17 +30,10 @@ export function search(queryValue: string, curPage: number, playerCount: string,
             categories: Category[],
             mechanics: Mechanic[],
             totalPages: number,
-            title: string
+            title: string,
+            userGameRatings: GameRating[],
+            avgUserGameRatings: GameRating[]
         }>(url, fetcher);
-
-    // if (guestUser && guestUser.games.length > 0) {
-    //     data?.games.forEach(game => {
-    //         game.owned = guestUser.games.some(g => g === game.id);
-    //     });
-    //     if (data && owned) {
-    //         data.games = data?.games?.filter(g => g.owned) ?? [];
-    //     }
-    // }
 
     return {
         data,

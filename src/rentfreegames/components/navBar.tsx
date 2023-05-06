@@ -147,7 +147,7 @@ export default function PrimarySearchAppBar() {
 
     const handleSignOut = () => {
         if (guestUser?.name !== "") {
-            setUser({ name: '', games: [], isGuest: true });
+            setUser({ name: '', games: [], isGuest: true, gameRatings: [] });
         }
         signOut()
         router.push(`/`)

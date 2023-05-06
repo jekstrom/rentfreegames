@@ -70,30 +70,6 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Grid item container xs={12} >
-                        <Grid item xs={8} >
-                            <Box sx={{ '& > legend': { mt: 2 }, marginLeft: "8px", marginBottom: "8px" }}>
-                                <Rating
-                                    name="rating"
-                                    value={row.rating}
-                                    sx={{ fontSize: 24, color: tomato }}
-                                    precision={0.5}
-                                    onChange={async (event, newValue) => {
-                                        await handleRating(sessionId, row.id, newValue);
-                                    }}
-                                    icon={<FavoriteIcon fontSize="inherit" />}
-                                    emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-                                />
-                            </Box>
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Box sx={{ display: 'flex', justifyContent: "right" }}>
-                                <Typography variant="subtitle2" component="div" sx={{ color: "secondary.main", fontSize: 10, marginRight: "8px" }}>
-                                    <FavoriteIcon sx={{ color: tomato, fontSize: 14 }} /> {row.rating ? `AVG ${row.avg_rating}` : ""}
-                                </Typography>
-                            </Box>
-                        </Grid>
-                    </Grid>
                 </Paper>
             </Grid>
         </React.Fragment>

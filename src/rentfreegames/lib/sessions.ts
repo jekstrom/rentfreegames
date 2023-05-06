@@ -259,7 +259,7 @@ export async function getUserSessionsData(id?: string): Promise<Session[]> {
         startTime: r.startTime ? dayjs(r.startTime) : null,
         expireDate: dayjs(r.expireDate),
         location: r.location,
-        createdBy: { name: r.name, games: [], id: id, sub: "", image: "" },
+        createdBy: { name: r.name, games: [], id: id, sub: "", image: "", gameRatings: [] },
         users: r.users.map(u => { return { name: u.name, games: [], id: u.id, sub: "", image: "" } }),
         numPlayers: r.numPlayers,
         inviteId: r.inviteId,

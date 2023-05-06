@@ -80,6 +80,7 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                                 <Rating
                                     name="rating"
                                     value={row.rating}
+                                    disabled 
                                     sx={{ fontSize: 24, color: tomato }}
                                     precision={0.5}
                                     onChange={async (event, newValue) => {

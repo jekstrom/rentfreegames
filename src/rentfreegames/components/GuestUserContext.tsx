@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { GuestUser } from '../interfaces';
 
-const GuestUserContext = React.createContext<GuestUser>({ id: "", sub: "", isGuest: true, name: '', games: [] });
+const GuestUserContext = React.createContext<GuestUser>({ id: "", sub: "", isGuest: true, name: '', games: [], gameRatings: [] });
 const SetGuestUserContext = React.createContext<React.Dispatch<React.SetStateAction<GuestUser>>>(() => {});
 
 export function useGuestUserContext() {
@@ -14,7 +14,7 @@ export function useSetGuestUserContext() {
 }
 
 export function useGuestUser() {
-    return useLocalStorage("guestUser", { id: "", sub: "", isGuest: true, name: '', games: [] });
+    return useLocalStorage("guestUser", { id: "", sub: "", isGuest: true, name: '', games: [], gameRatings: [] });
 }
 
 const GuestUserProvider = (props: any) => {
