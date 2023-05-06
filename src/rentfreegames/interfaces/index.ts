@@ -92,6 +92,7 @@ export interface Game {
     ownedBy?:                    [Owner]
     rating?:                     number,
     avg_rating?:                 number
+    numSwipes?:                  number
   }
   
   export interface Category {

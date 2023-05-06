@@ -2,7 +2,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BalanceIcon from '@mui/icons-material/Balance';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
-import { Link, Typography } from '@mui/material';
+import { Button, Link, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
@@ -15,6 +15,7 @@ import { Category, Game, Mechanic, Owner, User, GuestUser, GameRating, GameSwipe
 import { getSession } from '../pages/sessions/[id]';
 import Rating from '@mui/material/Rating';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import SwipeRightIcon from '@mui/icons-material/SwipeRight';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { tomato, theme } from '../styles/theme';
 import { useGuestUserContext } from './GuestUserContext';
@@ -66,6 +67,11 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                                     <AccessTimeIcon sx={{ fontSize: 14 }} /> {row.playtime}
                                 </Typography>
                             </Grid>
+                            <Grid item sx={{ textAlign: "right", display: "none" }}>
+                                <Typography variant="subtitle1" component="div" sx={{ fontSize: 14 }}>
+                                    <SwipeRightIcon sx={{ fontSize: 14 }} /> {row.numSwipes}
+                                </Typography>
+                            </Grid>
                         </Grid>
                     </Grid>
                     <Grid item container xs={12} >
@@ -98,22 +104,6 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
     );
 }
 
-function getGamesByPlayerCount(games: Game[], numPlayers: number): Game[] {
-    return games.filter(g => g.min_players <= numPlayers && g.max_players >= numPlayers);
-}
-
-function mergeGameOwners(games: Game[]): Game[] {
-    for (const game of games) {
-        const otherGame = games.find(g => g.id === game.id && g.ownedBy.every(o => game.ownedBy.every(ob => ob.userId !== o.userId)));
-        if (otherGame) {
-            game.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
-            otherGame.ownedBy = otherGame.ownedBy.concat(game.ownedBy) as [Owner];
-            otherGame.owned = true;
-        }
-    }
-    return games;
-}
-
 function getUniqueGames(games: Game[]) {
     // Unique games by BGGId
     let uniqueGames = Object.values(
@@ -127,7 +117,7 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getSwipedGames(games: Game[], userId: string, userRatings?: GameRating[], ratingSort?: string, swipedGames?: GameSwipe[]): Game[] {
+function getSwipedGames(games: Game[], userId: string, showAll: boolean, userRatings?: GameRating[], ratingSort?: string, swipedGames?: GameSwipe[]): Game[] {
     if (swipedGames) {
         let matchedGames = swipedGames.filter(s => s.userId === userId && s.swipedRight).map(s => s.gameId);
         matchedGames = swipedGames.filter(s => s.swipedRight && s.userId !== userId && matchedGames.includes(s.gameId)).map(s => s.gameId);
@@ -139,16 +129,19 @@ function getSwipedGames(games: Game[], userId: string, userRatings?: GameRating[
             }
         }
         
-        games = games.filter(g => matchedGames.includes(g.id)).sort((a,b) => swipers[b.id] - swipers[a.id]).slice(0, 3);
+        games = games.filter(g => matchedGames.includes(g.id)).sort((a,b) => swipers[b.id] - swipers[a.id]);
+
+        if (!showAll) {
+            games = games.slice(0, 3);
+        }
+
+        games = games.map(g => { 
+            g.numSwipes = swipers[g.id];
+            return g;
+        });
     }
 
-    return getUniqueGames(games).sort((a, b) => {
-        if (ratingSort === "user") {
-            return b.rating - a.rating;
-        } else if (ratingSort === "session") {
-            return b.avg_rating - a.avg_rating;
-        }
-    });
+    return getUniqueGames(games);;
 }
 
 const postData = async (url: string, data: any) => {
@@ -184,6 +177,7 @@ export default function SessionSwipingResults({
     const { data: session, status } = useSession();
     const userEmail = session?.user.email;
     const guestUser = useGuestUserContext();
+    const [showAll, setShowAll] = React.useState(false);
 
     const { data, error, isLoading, isValidating, url } = getSession(id, guestUser?.id);
     const { mutate } = useSWRConfig()
@@ -228,16 +222,16 @@ export default function SessionSwipingResults({
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>
             {
-                getSwipedGames(data.gameSession?.games, data.sessionUser?.id ?? guestUser.id, data.gameSession?.userGameRatings, ratingSort, data?.gameSession.userSwipes).length > 0
-                ? <Typography variant="h4" component="div">
-                    {title}
+                getSwipedGames(data.gameSession?.games, data.sessionUser?.id ?? guestUser.id, showAll, data.gameSession?.userGameRatings, ratingSort, data?.gameSession.userSwipes).length > 0
+                ? <Typography variant="h4" component="div" sx={{ paddingBottom: 2 }}>
+                    {title} <Button sx={{ bgcolor: "transparent" }} onClick={() => setShowAll(!showAll)}><sub>{showAll ? "top 3" : "all matches"}</sub></Button>
                 </Typography>
                 : <></>
             }
                 <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                     <Grid container item spacing={3}>
                         {
-                            getSwipedGames(data.gameSession?.games, data.sessionUser?.id ?? guestUser.id, data.gameSession?.userGameRatings, ratingSort, data?.gameSession.userSwipes).map((row) => (
+                            getSwipedGames(data.gameSession?.games, data.sessionUser?.id ?? guestUser.id, showAll, data.gameSession?.userGameRatings, ratingSort, data?.gameSession.userSwipes).map((row) => (
                                 <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
                             ))
                         }
