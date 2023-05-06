@@ -72,11 +72,16 @@ export default function UserGameSessions() {
                                                     </Tooltip>
                                                     &nbsp;
                                                     {
-                                                        session.startDate && dayjs(session.startDate)?.isAfter(new Date()) 
+                                                        session.startDate && dayjs(session.startDate)?.isAfter(new Date())
                                                         ? "Starting"
                                                         : "Started"
                                                     }
-                                                    &nbsp;{new Date(session.startDate?.toString() ?? session.created).toLocaleDateString()}&nbsp;
+                                                    &nbsp;
+                                                    {
+                                                        dayjs(session.startDate).format("YYYYMMDD") === dayjs(new Date()).format("YYYYMMDD") 
+                                                        ? dayjs(session.startTime).format("h:mm A")
+                                                        : new Date(session.startDate?.toString() ?? session.created).toLocaleDateString()
+                                                    }&nbsp;
                                                     
                                                     <AccessTimeIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp;
                                                     {

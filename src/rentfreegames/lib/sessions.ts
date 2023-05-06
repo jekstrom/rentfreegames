@@ -238,6 +238,7 @@ export async function getUserSessionsData(id?: string): Promise<Session[]> {
             c.startTime, \
             c.expireDate, \
             c.createdBy.name, \
+            c.location, \
             ARRAY_LENGTH(c.users) as numPlayers, \
             c.users \
         FROM c  \
@@ -257,6 +258,7 @@ export async function getUserSessionsData(id?: string): Promise<Session[]> {
         startDate: dayjs(r.startDate),
         startTime: dayjs(r.startTime),
         expireDate: dayjs(r.expireDate),
+        location: r.location,
         createdBy: { name: r.name, games: [], id: id, sub: "", image: "" },
         users: r.users.map(u => { return { name: u.name, games: [], id: u.id, sub: "", image: "" } }),
         numPlayers: r.numPlayers,
