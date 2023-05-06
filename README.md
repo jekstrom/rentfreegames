@@ -108,13 +108,9 @@ Review hosts
 
 publish public games session
 
-expire game sessions
-
 add a heart for a wishlist collection (inc. amazon affiliate links)
 
 import collection from bgg
-
-passwordless logins/guest users
 
 profile page
 
@@ -123,8 +119,6 @@ option to make invite link public to all players in a session
 send cal inv to people
 
 scan barcode to add game
-
-swipes
 
 submit feedback
 

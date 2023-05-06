@@ -21,6 +21,7 @@ import SessionSwipingResults from '../../components/sessionSwipingResults'
 import MenuIcon from '@mui/icons-material/Menu';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TimeField } from '@mui/x-date-pickers/TimeField';
 import dayjs from 'dayjs'
 import { DebounceInput } from 'react-debounce-input'
 
@@ -127,6 +128,22 @@ export default function SessionDetails() {
         }
     }
 
+    const updateStartTime = async (time: dayjs.Dayjs) => {
+        if (data?.gameSession?.createdBy?.id === data?.sessionUser?.id) {
+            let url = `/api/sessions/${data.gameSession.id}`
+            if (guestUser?.id) {
+                url += `?guestId=${guestUser.id}`;
+            }
+
+            await mutate(url, {
+                ...data,
+            gameSession: {...data.gameSession, startTime: time}
+            }, { revalidate: false });
+
+            await patchData(url, { startTime: time });
+        }
+    }
+
     const updateEndDate = async (date: dayjs.Dayjs) => {
         if (data?.gameSession?.createdBy?.id === data?.sessionUser?.id) {
             let url = `/api/sessions/${data.gameSession.id}`
@@ -173,13 +190,19 @@ export default function SessionDetails() {
             {
                 details && <Paper sx={{ padding: 2, marginBottom: 2 }}>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} sm={12} md={6}>
+                        <Grid item xs={12} sm={12} md={4}>
                             <Typography align="justify" gutterBottom>
                                 Date of the event
                             </Typography>
                             <DatePicker disablePast readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} maxDate={dayjs(data?.gameSession?.expireDate) ?? null} value={dayjs(data?.gameSession.startDate) ?? null} onChange={async (event) => await updateStartDate(event)}  />
                         </Grid>
-                        <Grid item xs={12} sm={12} md={6}>
+                        <Grid item xs={12} sm={12} md={4}>
+                            <Typography align="justify" gutterBottom>
+                                Starting time
+                            </Typography>
+                            <TimeField label="Start time" readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} value={dayjs(data?.gameSession?.startTime) ?? null} onChange={async (event) => await updateStartTime(event)}/>
+                        </Grid>                        
+                        <Grid item xs={12} sm={12} md={4}>
                             <Typography align="justify" gutterBottom>
                                 Expire date
                             </Typography>

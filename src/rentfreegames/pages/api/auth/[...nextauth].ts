@@ -25,7 +25,6 @@ export const authOptions: NextAuthOptions = {
   ],
    callbacks: {
     async jwt({ token, account }) {
-      console.log("signin");
       // IMPORTANT: Persist the access_token to the token right after sign in
       if (account) {
         token.idToken = account.id_token;

@@ -22,11 +22,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 import useSWR from 'swr';
-import { Session } from '../interfaces';
+import { ResponseError, Session, User } from '../interfaces';
 import { theme } from '../styles/theme';
 import utilStyles from '../styles/utils.module.css';
 import { useGuestUserContext, useSetGuestUserContext } from './GuestUserContext';
 import dayjs, { Dayjs } from 'dayjs';
+import dynamic from 'next/dynamic';
 
 function stringToColor(string: string) {
     let hash = 0;
@@ -59,6 +60,26 @@ function stringAvatar(name: string) {
     };
 }
 
+export const getUserMetaData = (guestUserId?: string) => {
+    let url = `/api/users/meta`
+    if (url && guestUserId) {
+        url += `?guestId=${guestUserId}`;
+    }
+
+    const { data, error, isLoading, isValidating } = useSWR<
+        { user: User },
+        ResponseError
+    >(() => url, fetcher)
+
+    return {
+        data,
+        isLoading,
+        error,
+        isValidating,
+        url
+    }
+}
+
 export default function PrimarySearchAppBar() {
     const router = useRouter();
     const { data: userSession, status } = useSession();
@@ -77,16 +98,19 @@ export default function PrimarySearchAppBar() {
     const [drawerState, setDrawerState] = React.useState(false);
 
     const { data, error, isLoading } = useSWR<Session[]>(`/api/sessions${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`, fetcher);
+    const { data: userData, isLoading: userIsLoading, error: userError, isValidating, url } = getUserMetaData(guestUser?.id);
 
-    if (error) {
+    if (error || userError) {
         console.log("Failed to load");
     }
-    if (isLoading) {
+    if (isLoading || userIsLoading) {
         console.log("Loading...");
     }
-    if (!data) {
+    if (!data && !userData) {
         return null;
     }
+
+    const SessionList = dynamic(() => import('./sessionListPane'))
 
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -167,81 +191,6 @@ export default function PrimarySearchAppBar() {
         </Menu>
     );
 
-    const renderSession = (session: Session) => {
-        return (
-            <Box key={session.id} sx={{ width: "100%", padding: "5px", color: theme.palette.primary.contrastText }}>
-                <Grid key={session.id} item xs={12} sm={12} md={12}>
-                    <Paper elevation={5} sx={{ p: 2, display: 'flex', flexDirection: 'column', height: "100%", bgcolor: theme.palette.background.paper, color: theme.palette.primary.contrastText }}>
-                        <Grid container>
-                            <Grid item xs={12} sm={12} md={12}>
-                                <Typography variant="h5" component="div">
-                                    <Link href={`/sessions/${session.id}${guestUser?.id ? `?guestId=${guestUser.id}` : ""}`} sx={{ color: theme.palette.secondary.light }}>{session.title}</Link>
-                                </Typography>
-                                <Typography variant="caption" component="p" sx={{ color: "primary.light" }}>
-                                    <Grid container>
-                                        <Grid item xs={12} sm={12} md={6}>
-                                            <AccessTimeIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
-                                            &nbsp;
-                                            {
-                                                session.startDate && dayjs(session.startDate)?.isAfter(new Date()) 
-                                                ? "Starting"
-                                                : "Started"
-                                            }
-                                            &nbsp;{new Date(session.startDate?.toString() ?? session.created).toLocaleDateString()}&nbsp;
-                                        </Grid>
-                                        
-                                        <Grid item xs={12} sm={12} md={6}>
-                                            <AccessTimeIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp;
-                                            {
-                                                session.expireDate && dayjs(session.expireDate)?.isAfter(new Date()) 
-                                                ? "Ending"
-                                                : "Ended"
-                                            }
-                                            {
-                                                session.expireDate && <>
-                                                &nbsp;{new Date(session.expireDate?.toString()).toLocaleDateString()}</>
-                                            }
-                                        </Grid>
-
-                                        <Grid item xs={12} sm={12} md={12}>
-                                            {
-                                                session.location && <><LocationOnIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
-                                                &nbsp;{session.location}</>
-                                            }
-                                        </Grid>
-                                    </Grid>
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={12} md={6}>
-                                <Typography variant="body2" component="p">
-                                    <GroupIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp; {session.users.length} players
-                                </Typography>
-                            </Grid>
-                            
-                            <Grid item xs={12} sm={12} md={6}>
-                                <Typography variant="body2" component="p">
-                                    <PersonIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />
-                                    &nbsp;Hosted by&nbsp;
-                                    {
-                                        session.createdBy.name === userSession?.user?.name
-                                            ? "you"
-                                            : session.createdBy.name
-                                    }
-                                </Typography>
-                            </Grid>
-
-                            <Grid item xs={12} sm={12} md={12}>
-                                <Typography variant="body2" component="p">
-                                    <MeepleIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} />&nbsp; {session.users.map(u => u.games.length).reduce((count, sum) => sum += count)} games
-                                </Typography>
-                            </Grid>
-                        </Grid>
-                    </Paper>
-                </Grid>
-            </Box>
-        )
-    }
-
     const DrawerHeader = styled('div')(({ theme }) => ({
         display: 'flex',
         alignItems: 'center',
@@ -278,7 +227,7 @@ export default function PrimarySearchAppBar() {
             <Divider/>
             {
                 (userSession?.user || guestUser) && data && data?.length > 0
-                    ? data.map((session) => renderSession(session))
+                    ? data.map((session) => <SessionList session={session} guestUser={guestUser} userSession={userSession} key={session.id} />)
                     : <></>
             }
             </Box>
@@ -366,6 +315,8 @@ export default function PrimarySearchAppBar() {
                             {
                                 userSession?.user?.image && userSession?.user?.image.length > 0
                                     ? <Avatar src={userSession?.user?.image} />
+                                    : userData?.user?.image && userData?.user?.image.length > 0
+                                    ? <Avatar src={userData?.user?.image} />
                                     : <Avatar {...stringAvatar(userSession?.user?.name ?? guestUser?.name ?? "User")} />
                             }
                         </IconButton>
@@ -438,8 +389,10 @@ export default function PrimarySearchAppBar() {
                                 >
                                     {
                                         userSession?.user?.image && userSession?.user?.image.length > 0
-                                            ? <Avatar src={userSession?.user?.image} />
-                                            : <Avatar {...stringAvatar(userSession?.user?.name ?? guestUser?.name ?? "User")} />
+                                        ? <Avatar src={userSession?.user?.image} />
+                                        : userData?.user?.image && userData?.user?.image.length > 0
+                                        ? <Avatar src={userData?.user?.image} />
+                                        : <Avatar {...stringAvatar(userSession?.user?.name ?? guestUser?.name ?? "User")} />
                                     }
                                 </IconButton>
                             </Box>

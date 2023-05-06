@@ -173,14 +173,17 @@ export interface Session {
     title: string,
     created: Date,
     inviteId: string,
-    users: User[],
-    createdBy: User | GuestUser,
+    users?: User[],
+    createdBy?: User | GuestUser,
     games?: Game[],
     userGameRatings?: GameRating[],
     userSwipes?: GameSwipe[],
     expireDate?: dayjs.Dayjs,
     startDate?: dayjs.Dayjs,
-    location?: string
+    startTime?: dayjs.Dayjs,
+    location?: string,
+    numPlayers?: number,
+    numGames?: number
 }
 
 export interface GameRating {

@@ -131,7 +131,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         // Update details
         const payload = JSON.parse(req.body);
         
-        if (!payload.startDate && !payload.endDate && !payload.location) {
+        if (!payload.startDate && !payload.endDate && !payload.location && !payload.startTime) {
             res.status(400).json({ message: "Missing details." });
             return;
         }
@@ -152,6 +152,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 return;
             }
             gameSession.startDate = newStartDate;
+        }
+        if (payload.startTime) {
+            const newStartTime = dayjs(new Date(Date.parse(payload.startTime)));
+
+            gameSession.startTime = newStartTime;
         }
         if (payload.endDate) {
             const newEndDate = dayjs(new Date(Date.parse(payload.endDate)));

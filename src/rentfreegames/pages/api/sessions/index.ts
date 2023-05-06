@@ -43,7 +43,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const newSession = await postSessionData(payload.title, userData);
 
         return res.json(newSession);
-    } else if (req.method === 'GET') {    
+    } else if (req.method === 'GET') {
         let gameSessions = await getUserSessionsData(userData.id as string);    
     
         return gameSessions

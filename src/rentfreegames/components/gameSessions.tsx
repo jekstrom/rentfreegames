@@ -98,12 +98,12 @@ export default function UserGameSessions() {
                                             </Grid>
                                             <Grid item xs={12} sm={12} md={4}>
                                                 <Typography variant="body2" component="p">
-                                                    <GroupIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp; {session.users.length} players
+                                                    <GroupIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp; {session.numPlayers} players
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={12} sm={12} md={4}>
                                                 <Typography variant="body2" component="p">
-                                                    <MeepleIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp; {session.users.map(u => u.games.length).reduce((count, sum) => sum += count)} games
+                                                    <MeepleIcon sx={{ color: "primary.main", fontSize: 16 }} />&nbsp; {session.numGames} games
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={12} sm={12} md={4}>

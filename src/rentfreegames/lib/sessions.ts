@@ -37,6 +37,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
         inviteId: `inv--${nanoid(6)}`,
         createdBy: cleanedUser,
         startDate: dayjs(today),
+        startTime: dayjs(today),
         expireDate: dayjs(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)), // One week in future
         location: "",
         users: [cleanedUser],
@@ -59,6 +60,7 @@ export async function postSessionData(title: string, user: User): Promise<Sessio
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
       startDate: dayjs(result.resource.startDate),
+      startTime: dayjs(result.resource.startTime),
       expireDate: dayjs(result.resource.expireDate),
       location: result.resource.location,
       users: result.resource.users,
@@ -91,6 +93,7 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
         inviteId: existingSession.inviteId,
         createdBy: existingSession.createdBy,
         startDate: dayjs(existingSession.startDate),
+        startTime: dayjs(existingSession.startTime),
         expireDate: dayjs(existingSession.expireDate),
         location: existingSession.location,
         users: [...existingSession.users, user],
@@ -112,6 +115,7 @@ export async function addSessionUser(sessionId: string, user: User, inviteId: st
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
       startDate: dayjs(result.resource.startDate),
+      startTime: dayjs(result.resource.startTime),
       expireDate: dayjs(result.resource.expireDate),
       location: result.resource.location,
       users: result.resource.users,
@@ -144,6 +148,7 @@ export async function updateUserSwipes(sessionId: string, swipedGames: GameSwipe
         inviteId: existingSession.inviteId,
         createdBy: existingSession.createdBy,
         startDate: dayjs(existingSession.startDate),
+        startTime: dayjs(existingSession.startTime),
         expireDate: dayjs(existingSession.expireDate),
         location: existingSession.location,
         users: existingSession.users,
@@ -165,6 +170,7 @@ export async function updateUserSwipes(sessionId: string, swipedGames: GameSwipe
       inviteId: result.resource.inviteId,
       createdBy: result.resource.createdBy,
       startDate: dayjs(result.resource.startDate),
+      startTime: dayjs(result.resource.startTime),
       expireDate: dayjs(result.resource.expireDate),
       location: result.resource.location,
       users: result.resource.users,
@@ -220,20 +226,44 @@ export async function getUserSessionsData(id?: string): Promise<Session[]> {
 
   if (id) {
     const today = new Date();
-    const tomorrow = dayjs(new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000))
+    const yesterday = dayjs(new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000))
     const { resources } = await container.items
       .query({
-        query: "SELECT c FROM c \
+        query: "SELECT \
+            c.id, \
+            c.inviteId, \
+            c.title, \
+            c.created, \
+            c.startDate, \
+            c.startTime, \
+            c.expireDate, \
+            c.createdBy.name, \
+            ARRAY_LENGTH(c.users) as numPlayers, \
+            c.users \
+        FROM c  \
         JOIN users in c.users \
         WHERE users.id = @id \
         AND c.expireDate >= @today",
-        parameters: [{ name: "@id", value: id }, { name: "@today", value: tomorrow.format("YYYY-MM-DD") }]
+        parameters: [{ name: "@id", value: id }, { name: "@today", value: yesterday.format("YYYY-MM-DD") }]
       })
       .fetchAll();
 
     let gameSessions = [] as Session[];
-    gameSessions = resources.map(r => r.c as Session);
-
+    resources.forEach(r => {
+      gameSessions.push({
+        id: r.id,
+        title: r.title,
+        created: new Date(r.created),
+        startDate: dayjs(r.startDate),
+        startTime: dayjs(r.startTime),
+        expireDate: dayjs(r.expireDate),
+        createdBy: { name: r.name, games: [], id: id, sub: "", image: "" },
+        users: r.users.map(u => { return { name: u.name, games: [], id: u.id, sub: "", image: "" } }),
+        numPlayers: r.numPlayers,
+        inviteId: r.inviteId,
+        numGames: r.users.map(u => u.games.length).reduce((count, sum) => sum += count)
+      })
+    });
     return gameSessions;
   }
 }
@@ -272,6 +302,7 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
             startDate: dayjs(gameSession.startDate),
+            startTime: dayjs(gameSession.startTime),
             expireDate: dayjs(gameSession.expireDate),
             location: gameSession.location,
             users: gameSession.users,
@@ -305,6 +336,7 @@ export async function updateSession(gameSession: Session): Promise<Session> {
         inviteId: gameSession.inviteId,
         createdBy: gameSession.createdBy,
         startDate: dayjs(gameSession.startDate),
+        startTime: dayjs(gameSession.startTime),
         expireDate: dayjs(gameSession.expireDate),
         location: gameSession.location,
         users: gameSession.users,
@@ -358,6 +390,7 @@ export async function updateUserGameSession(sessionId: string, user: User): Prom
             inviteId: gameSession.inviteId,
             createdBy: gameSession.createdBy,
             startDate: dayjs(gameSession.startDate),
+            startTime: dayjs(gameSession.startTime),
             expireDate: dayjs(gameSession.expireDate),
             location: gameSession.location,
             users: gameSession.users,
