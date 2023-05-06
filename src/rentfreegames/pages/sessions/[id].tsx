@@ -200,7 +200,7 @@ export default function SessionDetails() {
                             <Typography align="justify" gutterBottom>
                                 Starting time
                             </Typography>
-                            <TimeField label="Start time" readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} value={dayjs(data?.gameSession?.startTime) ?? null} onChange={async (event) => await updateStartTime(event)}/>
+                            <TimeField readOnly={data?.gameSession?.createdBy?.id !== data?.sessionUser?.id} value={dayjs(data?.gameSession?.startTime) ?? null} onChange={async (event) => await updateStartTime(event)}/>
                         </Grid>                        
                         <Grid item xs={12} sm={12} md={4}>
                             <Typography align="justify" gutterBottom>

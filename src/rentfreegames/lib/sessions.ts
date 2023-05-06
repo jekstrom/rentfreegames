@@ -256,7 +256,7 @@ export async function getUserSessionsData(id?: string): Promise<Session[]> {
         title: r.title,
         created: new Date(r.created),
         startDate: dayjs(r.startDate),
-        startTime: dayjs(r.startTime),
+        startTime: r.startTime ? dayjs(r.startTime) : null,
         expireDate: dayjs(r.expireDate),
         location: r.location,
         createdBy: { name: r.name, games: [], id: id, sub: "", image: "" },

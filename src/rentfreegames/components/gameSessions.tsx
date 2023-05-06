@@ -78,7 +78,7 @@ export default function UserGameSessions() {
                                                     }
                                                     &nbsp;
                                                     {
-                                                        dayjs(session.startDate).format("YYYYMMDD") === dayjs(new Date()).format("YYYYMMDD") 
+                                                        session.startTime && dayjs(session.startDate).format("YYYYMMDD") === dayjs(new Date()).format("YYYYMMDD") 
                                                         ? dayjs(session.startTime).format("h:mm A")
                                                         : new Date(session.startDate?.toString() ?? session.created).toLocaleDateString()
                                                     }&nbsp;
