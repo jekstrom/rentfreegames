@@ -55,7 +55,7 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                                     <Tooltip title={row.ownedBy.map(o => o.name).join(", ")}>
                                         <PersonIcon sx={{ fontSize: 14 }} />
                                     </Tooltip>
-                                    {row.ownedBy.length > 1 ? `${row.ownedBy.length} owners` : row.ownedBy.map(o => o.name).join(", ")}
+                                    {row.ownedBy.length > 1 ? `${row.ownedBy.length} owners` : row.ownedBy.map(o => o.name.split(' ').some(n => n.length > 10) ? `${o.name.substring(0, 10)}...` : o.name).join(", ")}
                                 </Typography>
                             </Grid>
                             <Grid item sx={{ textAlign: "right" }}>
