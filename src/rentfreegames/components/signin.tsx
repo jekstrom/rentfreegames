@@ -49,7 +49,7 @@ export default function Signin({ redirect }: { redirect?: string }) {
                 <Stack direction="row" spacing={2} sx={{ m: 1 }}>
                     <Button variant="outlined" onClick={() => {
                         if (guestUser?.name !== "") {
-                            setUser({ name: '', games: [], isGuest: true });
+                            setUser({ name: '', games: [], isGuest: true, gameRatings: [] });
                         }
                         signOut();
                     }}>
@@ -66,7 +66,7 @@ export default function Signin({ redirect }: { redirect?: string }) {
             if (userName === "") {
                 userName = "Guest";
             }
-            const newGuestUser = { id: "", name: userName, games: [], isGuest: true }
+            const newGuestUser = { id: "", name: userName, games: [], isGuest: true, gameRatings: [] }
 
             // Persist new guest user
             const persistedGuestUser = await postData(`/api/users/guest/`, newGuestUser);
