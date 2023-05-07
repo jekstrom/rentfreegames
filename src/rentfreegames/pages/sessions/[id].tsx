@@ -27,6 +27,9 @@ import { DebounceInput } from 'react-debounce-input'
 import GoogleIcon from '@mui/icons-material/Google';
 import utc from 'dayjs/plugin/utc'
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import { AddToCalendarButton } from 'add-to-calendar-button-react';
+
+dayjs.extend(utc)
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -181,7 +184,6 @@ export default function SessionDetails() {
 
     const GoogleCalendarLink = () => {
         const root = "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=";
-        dayjs.extend(utc)
         const startDateString = dayjs(data?.gameSession?.startDate).toISOString().replaceAll("-", "").replaceAll(":", "").split("T")[0];
         const startTime = dayjs(data?.gameSession?.startTime).utc().format("HHmm");
         const endTime = dayjs(data?.gameSession?.startTime).add(3, 'hour').utc().format("HHmm");
@@ -197,7 +199,6 @@ export default function SessionDetails() {
 
     const OutlookCalendarLink = () => {
         const root = "https://outlook.live.com/calendar/0/deeplink/compose?allday=false&"
-        dayjs.extend(utc)
         const startDateString = encodeURIComponent(dayjs(data?.gameSession?.startDate).toISOString().split("T")[0]);
         const startTime = encodeURIComponent(dayjs(data?.gameSession?.startTime).utc().format("HH:mm:00Z"));
         const endTime = encodeURIComponent(dayjs(data?.gameSession?.startTime).add(3, 'hour').utc().format("HH:mm:00Z"));
@@ -268,15 +269,19 @@ export default function SessionDetails() {
                         </Grid>
                         <Grid item container spacing={2} xs={12} sm={12} md={12}>
                             <Grid item>
-                                <Typography align="justify" gutterBottom>
-                                    Add to your calendar
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <GoogleCalendarLink />
-                            </Grid>
-                            <Grid item>
-                                <OutlookCalendarLink />
+                                <AddToCalendarButton
+                                    name={data?.gameSession?.title}
+                                    startDate={dayjs(data?.gameSession?.startDate).utc().format("YYYY-MM-DD") ?? null}
+                                    startTime={dayjs(data?.gameSession?.startTime).utc().format("HH:mm") ?? null}
+                                    endDate={dayjs(data?.gameSession?.startDate).add(3, 'hour').utc().format("YYYY-MM-DD") ?? null}
+                                    endTime={dayjs(data?.gameSession?.startTime).add(3, 'hour').utc().format("HH:mm") ?? null}
+                                    location={data?.gameSession?.location}
+                                    iCalFileName={`${data?.gameSession?.title}-event-rfg`}
+                                    options={['Apple','Google','Outlook.com','iCal']}
+                                    buttonStyle="text"
+                                    hideCheckmark
+                                    lightMode="dark"
+                                ></AddToCalendarButton>
                             </Grid>
                         </Grid>
                     </Grid>
