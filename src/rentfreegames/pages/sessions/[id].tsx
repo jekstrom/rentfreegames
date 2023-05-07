@@ -1,5 +1,5 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import { Divider, Grid, IconButton, InputBase, Paper, SelectChangeEvent, TextField, Tooltip, Typography } from '@mui/material'
+import { Divider, Grid, IconButton, InputBase, Link, Paper, SelectChangeEvent, TextField, Tooltip, Typography } from '@mui/material'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { ReactNode } from 'react'
@@ -24,6 +24,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimeField } from '@mui/x-date-pickers/TimeField';
 import dayjs from 'dayjs'
 import { DebounceInput } from 'react-debounce-input'
+import GoogleIcon from '@mui/icons-material/Google';
+import utc from 'dayjs/plugin/utc'
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -176,6 +179,39 @@ export default function SessionDetails() {
         }
     }
 
+    const GoogleCalendarLink = () => {
+        const root = "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=";
+        dayjs.extend(utc)
+        const startDateString = dayjs(data?.gameSession?.startDate).toISOString().replaceAll("-", "").replaceAll(":", "").split("T")[0];
+        const startTime = dayjs(data?.gameSession?.startTime).utc().format("HHmm");
+        const endTime = dayjs(data?.gameSession?.startTime).add(3, 'hour').utc().format("HHmm");
+        const expireDateString = dayjs(data?.gameSession?.expireDate).toISOString().replaceAll("-", "").replaceAll(":", "").split("T")[0];
+        const location = data?.gameSession?.location;
+        const title = data?.gameSession?.title;
+
+        return (<Link target="_blank" 
+            href={`${root}${startDateString}T${startTime}00Z%2f${startDateString}T${endTime}00Z&details=RFG Game Session&location=${location}&text=${title}`}> 
+            <GoogleIcon /> Google
+        </Link>)
+    }
+
+    const OutlookCalendarLink = () => {
+        const root = "https://outlook.live.com/calendar/0/deeplink/compose?allday=false&"
+        dayjs.extend(utc)
+        const startDateString = encodeURIComponent(dayjs(data?.gameSession?.startDate).toISOString().split("T")[0]);
+        const startTime = encodeURIComponent(dayjs(data?.gameSession?.startTime).utc().format("HH:mm:00Z"));
+        const endTime = encodeURIComponent(dayjs(data?.gameSession?.startTime).add(3, 'hour').utc().format("HH:mm:00Z"));
+        const location = data?.gameSession?.location;
+        const title = data?.gameSession?.title;
+
+        return (
+            <Link target="_blank" 
+            href={`${root}body=RFG Game Session&enddt=${startDateString}T${endTime}&location=${location}&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=${startDateString}T${endTime}&subject=${title}`}> 
+            <AlternateEmailIcon /> Outlook
+        </Link>
+        )
+    }
+
     return (
         <Layout>
             <Head>
@@ -229,6 +265,19 @@ export default function SessionDetails() {
                                     </IconButton>
                                 </Tooltip>
                             </Paper>
+                        </Grid>
+                        <Grid item container spacing={2} xs={12} sm={12} md={12}>
+                            <Grid item>
+                                <Typography align="justify" gutterBottom>
+                                    Add to your calendar
+                                </Typography>
+                            </Grid>
+                            <Grid item>
+                                <GoogleCalendarLink />
+                            </Grid>
+                            <Grid item>
+                                <OutlookCalendarLink />
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Paper>
