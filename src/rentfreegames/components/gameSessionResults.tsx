@@ -20,9 +20,9 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { tomato } from '../styles/theme';
 import { useGuestUserContext } from './GuestUserContext';
 import Image from "next/image";
+import { getUserMetaData } from './navBar'
 
-
-function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Game, handleRating: any }) {
+function FormRow({ sessionId, row, handleRating, userGameRatings, avgUserGameRatings }: { sessionId: string, row: Game, handleRating: any, userGameRatings: GameRating[], avgUserGameRatings: GameRating[] }) {
     return (
         <React.Fragment>
             <Grid item xs={12} sm={12} md={4}>
@@ -70,6 +70,31 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                             </Grid>
                         </Grid>
                     </Grid>
+                    <Grid item container xs={12} >
+                        <Grid item xs={8} >
+                            <Box sx={{ '& > legend': { mt: 2 }, marginLeft: "8px", marginBottom: "8px" }}>
+                                <Rating
+                                    name="rating"
+                                    value={userGameRatings ? userGameRatings.find(r => r.gameId === row.id)?.rating ?? 0 : 0}
+                                    sx={{ fontSize: 24, color: tomato }}
+                                    precision={0.5}
+                                    onChange={async (event, newValue) => {
+                                        await handleRating(row.id, newValue);
+                                    }}
+                                    icon={<FavoriteIcon fontSize="inherit" />}
+                                    emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+                                />
+                            </Box>
+                        </Grid>
+                        <Grid item xs={4}>
+                            <Box sx={{ display: 'flex', justifyContent: "right" }}>
+                                <Typography variant="subtitle2" component="div" sx={{ color: "secondary.main", fontSize: 10, marginRight: "8px" }}>
+                                    { avgUserGameRatings && avgUserGameRatings.find(r => r.gameId === row.id) ? <FavoriteIcon sx={{ color: tomato, fontSize: 14 }} /> : <></> } 
+                                    {avgUserGameRatings && avgUserGameRatings.find(r => r.gameId === row.id) ? `AVG ${(Math.round(avgUserGameRatings.find(r => r.gameId === row.id)?.rating * 100) / 100).toFixed(2) ?? 0}` : ""}
+                                </Typography>
+                            </Box>
+                        </Grid>
+                    </Grid>
                 </Paper>
             </Grid>
         </React.Fragment>
@@ -105,7 +130,7 @@ function getUniqueGames(games: Game[]) {
     return uniqueGames;
 }
 
-function getUserGames(games: Game[], userCount: number, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, ratingSort?: string): Game[] {
+function getUserGames(userId: string, games: Game[], userCount: number, query: string, playerCount?: string, mechanic?: Mechanic, category?: Category, owned?: boolean, ratingSort?: string, userGameRatings?: GameRating[], avgUserGameRatings?: GameRating[]): Game[] {
     // Flatten list of games
     if (!games) {
         return [];
@@ -136,13 +161,17 @@ function getUserGames(games: Game[], userCount: number, query: string, playerCou
         games = games.filter(g => g.owned);
     }
 
-    return games.sort((a, b) => {
-        if (ratingSort === "user") {
-            return b.rating - a.rating;
-        } else if (ratingSort === "session") {
-            return b.avg_rating - a.avg_rating;
-        }
-    });
+    if (userGameRatings && avgUserGameRatings) {
+        return games.sort((a, b) => {
+            if (ratingSort === "user") {
+                return (userGameRatings.find(r => r.userId === userId && r.gameId === b.id)?.rating ?? 0) - (userGameRatings.find(r => r.userId === userId && r.gameId === a.id)?.rating ?? 0);
+            } else if (ratingSort === "avg") {
+                return (avgUserGameRatings.find(r => r.gameId === b.id)?.rating ?? 0) - (avgUserGameRatings.find(r => r.gameId === a.id)?.rating ?? 0);
+            }
+        });
+    }
+
+    return games;
 }
 
 const postData = async (url: string, data: any) => {
@@ -180,14 +209,15 @@ export default function GameSessionResults({
     const guestUser = useGuestUserContext();
     
     const { data, error, isLoading, isValidating, url } = getSession(id, guestUser?.id);
+    const { data: userData, isLoading: userIsLoading, error: userError, isValidating: userIsValidating, url: userUrl } = getUserMetaData(guestUser?.id);
     const [showGamesList, setShowGamesList] = React.useState(true)
     const { mutate } = useSWRConfig()
 
-    if (error) {
+    if (error || userError) {
         console.log("Failed to load");
         return <div>Failed to load</div>
     }
-    if (isLoading) {
+    if (isLoading || userIsLoading) {
         console.log("Loading...");
         return <CircularProgress />
     }
@@ -195,26 +225,24 @@ export default function GameSessionResults({
         return null;
     }
 
-    const handleRating = async (sessionId: string, gameId: string, rating: number) => {
-        if (sessionId && gameId && rating > 0) {
-            const currentRatings = data?.gameSession?.userGameRatings ?? [];
-            const newRating = { gameId: gameId, userId: data.sessionUser?.id ?? guestUser.id, rating: rating };
-            if (currentRatings.length === 0 || !currentRatings.some(r => r.gameId === gameId && r.userId === data.sessionUser.id)) {
+    const handleRating = async (gameId: string, rating: number) => {
+        if (gameId && rating > 0) {
+            const currentRatings = data?.userGameRatings ?? [];
+            const newRating = { gameId: gameId, userId: userData.user.id, rating: rating };
+            if (currentRatings.length === 0 || !currentRatings.some(r => r.gameId === gameId && r.userId === userData.user.id)) {
                 currentRatings.push(newRating);
             }
 
-            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId === (data.sessionUser?.id ?? guestUser.id) ? { ...r, rating: rating } : { ...r });
+            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId === (userData.user.id) ? { ...r, rating: rating } : { ...r });
 
-            const gameSession = data.gameSession;
-            gameSession.userGameRatings = newRatings;
-            let url = `/api/sessions/${sessionId}`;
+            let ratingsApi = `/api/users/ratings`;
             if (guestUser?.id) {
-                url = `/api/sessions/${sessionId}?guestId=${guestUser.id}`;
+                ratingsApi += `?guestId=${guestUser.id}`;
             }
-            await postData(url, { gameId, rating }).then(async () => {
+            await postData(ratingsApi, {ratings: [{ userId: userData.user.id, gameId, rating }]}).then(async () => {
                 await mutate(url, {
                     ...data,
-                    gameSession
+                    userGameRatings: newRatings
                 }, { revalidate: true });
             });
         }
@@ -232,8 +260,20 @@ export default function GameSessionResults({
                 ? <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
                     <Grid container item spacing={3}>
                         {
-                            getUserGames(data.gameSession?.games, data.gameSession?.users?.length ?? 0, query, playerCount, mechanic, category, owned, ratingSort).map((row) => (
-                                <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
+                            getUserGames(
+                                userData?.user?.id,
+                                data.gameSession?.games, 
+                                data.gameSession?.users?.length ?? 0, 
+                                query, 
+                                playerCount, 
+                                mechanic, 
+                                category, 
+                                owned, 
+                                ratingSort,
+                                data.userGameRatings, 
+                                data.avgUserGameRatings
+                            ).map((row) => (
+                                <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} userGameRatings={data.userGameRatings} avgUserGameRatings={data.avgUserGameRatings} />
                             ))
                         }
                     </Grid>

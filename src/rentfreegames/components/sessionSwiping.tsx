@@ -132,7 +132,7 @@ export default function SessionSwiping() {
 
     const GameCard = dynamic(() => import('./gameCard'))
 
-    function GameModal({ games }: { games: Game[] | null }) {
+    function GameModal({ games, userGameRatings, avgUserGameRatings }: { games: Game[] | null, userGameRatings: GameRating[], avgUserGameRatings: GameRating[] }) {
         return (
             <Modal
                 aria-labelledby={`transition-modal-games`}
@@ -164,7 +164,7 @@ export default function SessionSwiping() {
                         {
                             games ? games.map((game, index) => (
                                 currentSwipe?.id === game.id && swipableGames.some(g => g.id == game.id)
-                                    ? <div key="game-swipable"> { games[index+1] && <GameCard game={games[index+1]} onDragEnd={onDragEnd} key={games[index+1].id} /> } <GameCard game={game} onDragEnd={onDragEnd} key={game.id} /> </div>
+                                    ? <div key="game-swipable"> { games[index+1] && <GameCard game={games[index+1]} userGameRatings={userGameRatings} avgUserGameRatings={avgUserGameRatings} onDragEnd={onDragEnd} key={games[index+1].id} /> } <GameCard game={game} userGameRatings={userGameRatings} avgUserGameRatings={avgUserGameRatings} onDragEnd={onDragEnd} key={game.id} /> </div>
                                     : <div key={game.id}></div>
                             ))
                                 : <Box sx={{ width: "100%", overflow: "hidden", userSelect: "none", display: "none" }} key="no-game" />
@@ -191,7 +191,7 @@ export default function SessionSwiping() {
                             : <></>
                     }
 
-                    <GameModal games={data?.gameSession?.games} key="games-modal" />
+                    <GameModal games={data?.gameSession?.games} userGameRatings={data?.userGameRatings} avgUserGameRatings={data?.avgUserGameRatings} key="games-modal" />
                     <Snackbar
                         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
                         open={snackState}

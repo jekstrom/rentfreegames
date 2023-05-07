@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from '../../auth/[...nextauth]'
 import { getSessionData, updateSession } from '../../../../lib/sessions'
 import { getCategories, getMechanics } from '../../../../lib/search'
-import { getUserData, getGuestUserData } from '../../../../lib/users'
+import { getUserData, getGuestUserData, getAverageGameRatings } from '../../../../lib/users'
 import { User, GuestUser, Game, GameRating, Owner } from '../../../../interfaces'
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -184,8 +184,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const categories = await getCategories(today);
         const mechanics = await getMechanics(today);
 
+        let userGameRatings = [] as GameRating[];
+        let avgUserGameRatings = [] as GameRating[];
+        if (userData) {
+            userGameRatings = userData.gameRatings;
+
+            avgUserGameRatings = await getAverageGameRatings();
+        }
+
         return gameSession
-            ? res.status(200).json({gameSession, categories, mechanics, sessionUser: userData})
+            ? res.status(200).json({gameSession, categories, mechanics, sessionUser: userData, userGameRatings, avgUserGameRatings})
             : res.status(404).json({ message: `User with id: ${id} not found.` })
     }
 }

@@ -10,7 +10,7 @@ import Layout from '../../../components/layout';
 import PlayerList from '../../../components/playersList';
 import Search from '../../../components/search';
 import SearchFiltersPlayers from '../../../components/searchFiltersPlayers';
-import { Category, GuestUser, Mechanic, ResponseError, Session, User } from '../../../interfaces';
+import { Category, GuestUser, Mechanic, ResponseError, Session, User, GameRating } from '../../../interfaces';
 import utilStyles from '../../../styles/utils.module.css';
 import GameSessionResults from '../../../components/gameSessionResults';
 import SearchFiltersCategory from '../../../components/searchFiltersCategory';
@@ -39,7 +39,7 @@ export const getInviteSession = (inviteId: string, guestUser?: GuestUser) => {
     }
 
     const { data, error, isLoading, isValidating } = useSWR<
-        { gameSession: Session, user: User | GuestUser, categories: Category[], mechanics: Mechanic[] },
+        { gameSession: Session, user: User | GuestUser, categories: Category[], mechanics: Mechanic[], userGameRatings: GameRating[], avgUserGameRatings: GameRating[] },
         ResponseError
     >(() => url, fetcher)
 
@@ -78,7 +78,7 @@ export default function SessionDetails() {
                 </Grid>
             </Layout>
         } else {
-            return <Layout><div>Failed to load</div></Layout>
+            return <Layout><p>Failed to load</p></Layout>
         }
     }
     if (isLoading) {

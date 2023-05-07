@@ -202,7 +202,7 @@ export default function GameSearchResults({
             if (guestUser?.id) {
                 ratingsApi += `?guestId=${guestUser.id}`;
             }
-            await postData(ratingsApi, {ratings: [{ gameId, rating }]}).then(async () => {
+            await postData(ratingsApi, {ratings: [{ userId: userData.user.id, gameId, rating }]}).then(async () => {
                 await mutate(url, {
                     ...data,
                     userGameRatings: newRatings

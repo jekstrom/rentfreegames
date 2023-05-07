@@ -25,7 +25,7 @@ export default function SearchSortRating({
                     >
                         <FormControlLabel value="none" control={<Radio />} label="none" />
                         <FormControlLabel value="user" control={<Radio />} label="Your ratings" />
-                        <FormControlLabel value="session" control={<Radio />} label="Session ratings" />
+                        <FormControlLabel value="avg" control={<Radio />} label="Average ratings" />
                     </RadioGroup>
                 </FormControl>
         </Box>

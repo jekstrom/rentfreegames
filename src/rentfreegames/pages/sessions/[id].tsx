@@ -15,7 +15,7 @@ import SearchFiltersOwned from '../../components/searchFiltersOwned'
 import SearchFiltersPlayers from '../../components/searchFiltersPlayers'
 import SearchSortRating from '../../components/searchRatingSort'
 import SessionSwiping from '../../components/sessionSwiping'
-import { Category, Mechanic, ResponseError, Session, User } from '../../interfaces'
+import { Category, Mechanic, ResponseError, Session, User, GameRating } from '../../interfaces'
 import utilStyles from '../../styles/utils.module.css'
 import SessionSwipingResults from '../../components/sessionSwipingResults'
 import MenuIcon from '@mui/icons-material/Menu';
@@ -45,7 +45,7 @@ export function getSession(id: string, guestId?: string) {
         url += `?guestId=${guestId}`
     }
     const { data, error, isLoading, isValidating } = useSWR<
-        { gameSession: Session, sessionUser: User, categories: Category[], mechanics: Mechanic[] },
+        { gameSession: Session, sessionUser: User, categories: Category[], mechanics: Mechanic[], userGameRatings: GameRating[], avgUserGameRatings: GameRating[] },
         ResponseError
     >(() => url, fetcher)
 

@@ -21,7 +21,7 @@ import { tomato, theme } from '../styles/theme';
 import { useGuestUserContext } from './GuestUserContext';
 import Image from "next/image";
 
-function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Game, handleRating: any }) {
+function FormRow({ row, userGameRatings, avgUserGameRatings }: { row: Game, userGameRatings: GameRating[], avgUserGameRatings: GameRating[] }) {
     return (
         <React.Fragment>
             <Grid item xs={12} sm={12} md={4}>
@@ -83,9 +83,6 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                                     disabled 
                                     sx={{ fontSize: 24, color: tomato }}
                                     precision={0.5}
-                                    onChange={async (event, newValue) => {
-                                        await handleRating(sessionId, row.id, newValue);
-                                    }}
                                     icon={<FavoriteIcon fontSize="inherit" />}
                                     emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
                                 />
@@ -93,8 +90,9 @@ function FormRow({ sessionId, row, handleRating }: { sessionId: string, row: Gam
                         </Grid>
                         <Grid item xs={4}>
                             <Box sx={{ display: 'flex', justifyContent: "right"}}>
-                                <Typography variant="subtitle2" component="div" sx={{ color: "secondary.main", fontSize: 10, marginRight: "8px" }}>
-                                    <FavoriteIcon sx={{ color: tomato, fontSize:14 }}/> {row.rating ? `AVG ${row.avg_rating}` : ""}
+                            <Typography variant="subtitle2" component="div" sx={{ color: "secondary.main", fontSize: 10, marginRight: "8px" }}>
+                                    { avgUserGameRatings && avgUserGameRatings.find(r => r.gameId === row.id) ? <FavoriteIcon sx={{ color: tomato, fontSize: 14 }} /> : <></> } 
+                                    {avgUserGameRatings && avgUserGameRatings.find(r => r.gameId === row.id) ? `AVG ${(Math.round(avgUserGameRatings.find(r => r.gameId === row.id)?.rating * 100) / 100).toFixed(2) ?? 0}` : ""}
                                 </Typography>
                             </Box>
                         </Grid>
@@ -195,31 +193,6 @@ export default function SessionSwipingResults({
         return null;
     }
 
-    const handleRating = async (sessionId: string, gameId: string, rating: number) => {
-        if (sessionId && gameId && rating > 0) {
-            const currentRatings = data?.gameSession?.userGameRatings ?? [];
-            const newRating = { gameId: gameId, userId: data.sessionUser?.id ?? guestUser.id, rating: rating };
-            if (currentRatings.length === 0 || !currentRatings.some(r => r.gameId === gameId && r.userId === data.sessionUser.id)) {
-                currentRatings.push(newRating);
-            }
-
-            const newRatings = currentRatings.map(r => r.gameId === gameId && r.userId ===  (data.sessionUser?.id ?? guestUser.id) ? { ...r, rating: rating } : { ...r});
-
-            const gameSession = data.gameSession;
-            gameSession.userGameRatings = newRatings;
-            let url = `/api/sessions/${sessionId}`;
-            if (guestUser?.id) {
-                url = `/api/sessions/${sessionId}?guestId=${guestUser.id}`;
-            }
-            await postData(url, { gameId, rating }).then(async () => {
-                await mutate(url, {
-                    ...data,
-                    gameSession
-                }, { revalidate: true });
-            });
-        }
-    };
-
     return (
         <Box sx={{ flexGrow: 1, paddingTop: 2 }}>
             {
@@ -233,7 +206,7 @@ export default function SessionSwipingResults({
                     <Grid container item spacing={3}>
                         {
                             getSwipedGames(data.gameSession?.games, data.sessionUser?.id ?? guestUser.id, showAll, data.gameSession?.userGameRatings, ratingSort, data?.gameSession.userSwipes).map((row) => (
-                                <FormRow sessionId={data.gameSession.id} row={row} key={row.id} handleRating={handleRating} />
+                                <FormRow row={row} key={row.id} userGameRatings={data.userGameRatings} avgUserGameRatings={data.avgUserGameRatings} />
                             ))
                         }
                     </Grid>
