@@ -271,10 +271,11 @@ export default function SessionDetails() {
                             <Grid item>
                                 <AddToCalendarButton
                                     name={data?.gameSession?.title}
-                                    startDate={dayjs(data?.gameSession?.startDate).utc().format("YYYY-MM-DD") ?? null}
-                                    startTime={dayjs(data?.gameSession?.startTime).utc().format("HH:mm") ?? null}
-                                    endDate={dayjs(data?.gameSession?.startDate).add(3, 'hour').utc().format("YYYY-MM-DD") ?? null}
-                                    endTime={dayjs(data?.gameSession?.startTime).add(3, 'hour').utc().format("HH:mm") ?? null}
+                                    startDate={dayjs(data?.gameSession?.startDate).startOf("day").utc().format("YYYY-MM-DD") ?? null}
+                                    startTime={dayjs(data?.gameSession?.startTime).format("HH:mm") ?? null}
+                                    endDate={dayjs(data?.gameSession?.startDate).startOf("day").utc().format("YYYY-MM-DD") ?? null}
+                                    endTime={dayjs(data?.gameSession?.startTime).isAfter(dayjs(data?.gameSession?.startTime).endOf('day').add(-3, 'hour')) ? dayjs(data?.gameSession?.startTime).endOf('day').format("HH:mm")  : dayjs(data?.gameSession?.startTime).add(3, 'hour').format("HH:mm") ?? null }
+                                    timeZone='currentBrowser'
                                     location={data?.gameSession?.location}
                                     iCalFileName={`${data?.gameSession?.title}-event-rfg`}
                                     options={['Apple','Google','Outlook.com','iCal']}
