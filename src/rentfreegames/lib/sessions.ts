@@ -289,13 +289,14 @@ export async function updateUserGameSessions(user: User): Promise<Session[]> {
       let gameSessions = [] as Session[];
       gameSessions = resources.map(r => r.c as Session);
 
-      for (const gameSession of gameSessions) {
+      for (const gameSession of gameSessions.filter(s => dayjs(s.expireDate).isAfter(dayjs(new Date())))) {
         gameSession.users = gameSession.users.map(u => {
           if (u.id === user.id) {
             u.games = user.games;
           }
           return u;
         });
+
         const result = await container.items.upsert(
           {
             id: gameSession.id,
