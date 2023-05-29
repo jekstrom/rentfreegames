@@ -39,22 +39,3 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
-
-- stage: BuildProd
-  displayName: Build and push prod
-  jobs:
-  - job: BuildDocker
-    displayName: BuildDocker
-    condition: and(succeeded(), eq(variables.isMaster, true))
-    pool:
-      vmImage: $(vmImageName)
-    steps:
-    - task: Docker@2
-      displayName: Build and push an image to container registry
-      inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
