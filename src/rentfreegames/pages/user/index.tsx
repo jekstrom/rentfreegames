@@ -171,11 +171,11 @@ export default function UserProfile() {
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Grid item xs={12}>
+                    {/* <Grid item xs={12}>
                         <Button variant="contained" endIcon={<DeleteIcon sx={{ color: "secondary.light" }} />} onClick={() => deleteUserGames()} sx={{ bgcolor: "secondary.main", color: "secondary.contrastText", height: "100%" }}>
                             Reset game collection
                         </Button>
-                    </Grid>
+                    </Grid> */}
                 </Grid>
             </Layout>
         )
